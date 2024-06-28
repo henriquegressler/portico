@@ -1,11 +1,22 @@
 # *
 .DS_Store
+*~
+*.vcxproj.user
+*.csproj.user
+*.sdf
+*.opensdf
+*.suo
+*.VC.db
+*.VC.opendb
+*.aps
+.vs/
 
 # /
 /MacOSX
 /eclipse-build
 /(*
 /cpp-*
+/ieee1516e-*
 
 # /.settings/
 /.settings/org.eclipse.mylyn.tasks.ui.prefs

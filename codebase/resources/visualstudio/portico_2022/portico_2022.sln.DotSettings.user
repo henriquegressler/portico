@@ -1,0 +1,7 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:Boolean x:Key="/Default/RunConfigs/Config/=4842796A5F94EF42B97CFBD810E0AB96/@KeyIndexDefined">True</s:Boolean>
+	<s:String x:Key="/Default/RunConfigs/Config/=4842796A5F94EF42B97CFBD810E0AB96/Type/@EntryValue">project</s:String>
+	<s:String x:Key="/Default/RunConfigs/Config/=4842796A5F94EF42B97CFBD810E0AB96/Name/@EntryValue">hla13FedTime</s:String>
+	<s:String x:Key="/Default/RunConfigs/Config/=4842796A5F94EF42B97CFBD810E0AB96/ProjectGuid/@EntryValue">F3B1024506931A42AD4A00F18DC7D974</s:String>
+	<s:String x:Key="/Default/RunConfigs/Config/=4842796A5F94EF42B97CFBD810E0AB96/DefaultAction/@EntryValue">run</s:String>
+	<s:String x:Key="/Default/RunConfigs/Active/@EntryValue">4842796A5F94EF42B97CFBD810E0AB96</s:String></wpf:ResourceDictionary>
