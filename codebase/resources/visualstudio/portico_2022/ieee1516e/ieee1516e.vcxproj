@@ -114,7 +114,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>BUILDING_RTI;RTI_DISABLE_WARNINGS;_CRT_SECURE_NO_WARNINGS;_DEBUG</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\src\cpp\ieee1516e\include;$(ProjectDir)..\..\..\..\src\cpp\ieee1516e\src;$(ProjectDir)..\..\..\..\lib\pugixml\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\src\cpp\ieee1516e\include;$(ProjectDir)..\..\..\..\src\cpp\ieee1516e\src;$(ProjectDir)..\..\..\..\lib\pugixml\include;%(AdditionalIncludeDirectories);C:\Program Files\Eclipse Adoptium\jdk-11.0.23.9-hotspot\include\win32;C:\Program Files\Eclipse Adoptium\jdk-11.0.23.9-hotspot\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

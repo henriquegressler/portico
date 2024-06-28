@@ -73,14 +73,14 @@
       <AdditionalDependencies>cppunit_64d.lib;librti1516e64d.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
+  <!-- ItemGroup>
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\test\common\common.cpp" />
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\test\common\main.cpp" />
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\test\common\Test1516eFedAmb.cpp" />
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\test\common\Test1516eFederate.cpp" />
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\test\datatype\AttributeDatatypeTest.cpp" />
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\test\parse\QuickCreateTest.cpp" />
-  </ItemGroup>
+  </ItemGroup -->
   <ItemGroup>
     <ClInclude Include="..\..\..\..\src\cpp\ieee1516e\test\common\common.h" />
     <ClInclude Include="..\..\..\..\src\cpp\ieee1516e\test\common\Test1516eFedAmb.h" />

@@ -151,45 +151,6 @@
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\rtiamb\TimeManagement.cpp">
       <Filter>rtiamb</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\AlternativeImpl.cpp">
-      <Filter>portico\types</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\ArrayTypeImpl.cpp">
-      <Filter>portico\types</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\BasicTypeImpl.cpp">
-      <Filter>portico\types</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\DimensionImpl.cpp">
-      <Filter>portico\types</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\EnumeratedTypeImpl.cpp">
-      <Filter>portico\types</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\EnumeratorImpl.cpp">
-      <Filter>portico\types</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\FieldImpl.cpp">
-      <Filter>portico\types</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\FixedRecordTypeImpl.cpp">
-      <Filter>portico\types</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\NaTypeImpl.cpp">
-      <Filter>portico\types</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\SimpleTypeImpl.cpp">
-      <Filter>portico\types</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\types\VariantRecordTypeImpl.cpp">
-      <Filter>portico\types</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\DatatypeRetrieval.cpp">
-      <Filter>portico</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\portico\PorticoRtiAmbassadorEx.cpp">
-      <Filter>portico</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\cpp\ieee1516e\src\types\Exceptions.cpp">
       <Filter>types</Filter>
     </ClCompile>
