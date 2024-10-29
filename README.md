@@ -182,3 +182,12 @@ gauge the level of community interest in the project. You can sign up from the U
 So there you go, we hope you enjoy using Portico :)
 
 --The Portico Development Team
+
+## Como construir a aplicação no windows 11, com Visual Studio 2019
+    
+  - Usar como base a TAG 2.1.0
+  - Ajustar no arquivo codebase/build.properties as propriedades jdk.home.win{32,64}, para refletir o java instalado no sistema. Utilizei "C:/Program Files (x86)/Eclipse Adoptium/jdk-11.0.23.9-hotspot" e "C:/Program Files/Eclipse Adoptium/jdk-11.0.23.9-hotspot".
+  - Ajustar o arquivo codebase/profiles/system.properties.xml, excluindo versões não instaladas do VC, como vc10, vc14 e vc14_1.
+  - Abrir um terminal do Developer Powershell for VC2019, e executar o ant.bat a partir deste terminal.
+  - Usar ant.bat java.sandbox e cpp.sandbox para fazer a build específica do java ou do cpp.
+  - Usar ant.bat release.thin para fazer uma release, sem executar os testes, que estão quebrados.
