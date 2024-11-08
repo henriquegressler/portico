@@ -97,7 +97,7 @@ Table of Contents:
  helper script: 
  
    * [Open Visual Studio 2010 Command Prompt]
-   * cd %RTI_HOME%\examples\cpp\hla13
+   * cd %PORTICO_RTI_HOME%\examples\cpp\hla13
    * winXX-vc10 compile                        // win32-vc10 or win64-vc10
    * winXX-vc10 execute                        // win32-vc10 or win64-vc10                  
 
@@ -106,7 +106,7 @@ Table of Contents:
  To run on Ubuntu, ensure you have g++ installed and then open a command prompt,
  change into the directory, compile and run using the script:
 
-   * cd $RTI_HOME/examples/cpp/hla13
+   * cd $PORTICO_RTI_HOME/examples/cpp/hla13
    * ./linux64.sh compile
    * ./linux64.sh execute
 
@@ -115,7 +115,7 @@ Table of Contents:
  To run on Mac OS X, ensure you have the XCode tools (gcc) installed, open a
  termincal and then run the helper script:
 
-   * cd $RTI_HOME/examples/cpp/hla13
+   * cd $PORTICO_RTI_HOME/examples/cpp/hla13
    * ./macos.sh compile
    * ./macos.sh execute
 
@@ -149,7 +149,7 @@ Table of Contents:
  If you want to use a different version of the Visual Studio compiler, you can.
  You should try to match the version of the RTI libraries with the version of
  Visual Studio you use. Libraries for VC10 (2010), VC9 (2008) and VC8 (2005)
- are provided. See the appropriate subdirectories of [RTI_HOME]\bin and lib.
+ are provided. See the appropriate subdirectories of [PORTICO_RTI_HOME]\bin and lib.
 
  Resources to get you started
  -----------------------------

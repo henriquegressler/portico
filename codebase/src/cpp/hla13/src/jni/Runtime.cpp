@@ -208,23 +208,23 @@ void Runtime::initializeJVM() throw( HLA::RTIinternalError )
  */
 pair<string,string> Runtime::generatePaths() throw( HLA::RTIinternalError )
 {
-	// Check for the presence of RTI_HOME
-	// RTI_HOME *has* to be set. No two ways about it. Fail out if this isn't the case.
+	// Check for the presence of PORTICO_RTI_HOME
+	// PORTICO_RTI_HOME *has* to be set. No two ways about it. Fail out if this isn't the case.
 	// We make all inferences about path locations based off it, give it to us!
-	char *rtihome = getenv( "RTI_HOME" );
+	char *rtihome = getenv( "PORTICO_RTI_HOME" );
 	if( !rtihome )
 	{
-		logger->fatal( "RTI_HOME not set: this is *REQUIRED* to point to your Portico directory" );
-		throw HLA::RTIinternalError( "RTI_HOME not set: this *must* point to your Portico directory" );
+		logger->fatal( "PORTICO_RTI_HOME not set: this is *REQUIRED* to point to your Portico directory" );
+		throw HLA::RTIinternalError( "PORTICO_RTI_HOME not set: this *must* point to your Portico directory" );
 	}
 	else
 	{
 		// check to make sure it is set to a valid location
 		if( pathExists(string(rtihome)) == false )
 		{
-			logger->fatal( "RTI_HOME doesn't exist: this is *REQUIRED* to point to your Portico directory" );
-			logger->fatal( "RTI_HOME set to [%s]", rtihome );
-			throw HLA::RTIinternalError( "RTI_HOME set to directory that doesn't exist" );
+			logger->fatal( "PORTICO_RTI_HOME doesn't exist: this is *REQUIRED* to point to your Portico directory" );
+			logger->fatal( "PORTICO_RTI_HOME set to [%s]", rtihome );
+			throw HLA::RTIinternalError( "PORTICO_RTI_HOME set to directory that doesn't exist" );
 		}
 	}
 
@@ -242,15 +242,15 @@ pair<string,string> Runtime::generatePaths() throw( HLA::RTIinternalError )
  * 
  * (Classpath)
  *   * System classpath
- *   * $RTI_HOME\lib\portico.jar
+ *   * $PORTICO_RTI_HOME\lib\portico.jar
  *   
  * (Library Path)
  *   * System path
- *   * $RTI_HOME\bin
+ *   * $PORTICO_RTI_HOME\bin
  *   * $JAVA_HOME\jre\lib\i386\client  (32-bit JRE)
  *   * $JAVA_HOME\jre\lib\amd64\server (64-bit JRE)
  * 
- * If JAVA_HOME isn't set on the computer, RTI_HOME is used to link in with any JRE
+ * If JAVA_HOME isn't set on the computer, PORTICO_RTI_HOME is used to link in with any JRE
  * that Portico has shipped with.  
  */
 pair<string,string> Runtime::generateWinPath( string rtihome ) throw( HLA::RTIinternalError )
@@ -260,7 +260,7 @@ pair<string,string> Runtime::generateWinPath( string rtihome ) throw( HLA::RTIin
 	//////////////////////////////////
 	// 1. Set up the Java Classpath //
 	//////////////////////////////////
-	// pick up the system classpath and put $RTI_HOME/lib/portico.jar on the end
+	// pick up the system classpath and put $PORTICO_RTI_HOME/lib/portico.jar on the end
 	const char *systemClasspath = getenv( "CLASSPATH" );
 	if( !systemClasspath )
 	{
@@ -272,15 +272,15 @@ pair<string,string> Runtime::generateWinPath( string rtihome ) throw( HLA::RTIin
 	stringstream classpath;
 	classpath << "-Djava.class.path=.;"
 	          << string(systemClasspath) << ";"      // system classpath
-	          << rtihome << "\\lib\\portico.jar;";   // %RTI_HOME%\lib\portico.jar
+	          << rtihome << "\\lib\\portico.jar;";   // %PORTICO_RTI_HOME%\lib\portico.jar
 	paths.first = classpath.str();
 
 	////////////////////////////////
 	// 2. Set up the library path //
 	////////////////////////////////
 	// For the RTI to operate properly, the following must be on the path used to start the JVM:
-	//  * DLLs for the Portico C++ interface   - $RTI_HOME/bin/[compiler_ver]
-	//  * DLLs for the JVM                     - $RTI_HOME/jre/lib/amd64/server
+	//  * DLLs for the Portico C++ interface   - $PORTICO_RTI_HOME/bin/[compiler_ver]
+	//  * DLLs for the JVM                     - $PORTICO_RTI_HOME/jre/lib/amd64/server
 	
 	// Set to JAVA_HOME as a fallback -- only used when we're in development environments really.
 	// Any distribution should have a bundled JRE
@@ -290,7 +290,7 @@ pair<string,string> Runtime::generateWinPath( string rtihome ) throw( HLA::RTIin
 		string jrelocation( javaHome );
 	
 	// Portico ships a JRE with it, but we might be building in a development environment
-	// so check to see if RTI_HOME/jre is packaged first, then fallback on JAVA_HOME from above
+	// so check to see if PORTICO_RTI_HOME/jre is packaged first, then fallback on JAVA_HOME from above
 	string temp = string(rtihome).append( "\\jre\\bin\\java.exe" );
 	if( pathExists(temp) )
 	{
@@ -345,16 +345,16 @@ pair<string,string> Runtime::generateWinPath( string rtihome ) throw( HLA::RTIin
  * 
  * (Classpath)
  *   * System classpath
- *   * $RTI_HOME/lib/portico.jar
+ *   * $PORTICO_RTI_HOME/lib/portico.jar
  *   
  * (Library Path)
  *   * System path
- *   * $RTI_HOME/lib
+ *   * $PORTICO_RTI_HOME/lib
  *   * $JAVA_HOME/jre/lib/server       (Mac OS X 64-bit)
  *   * $JAVA_HOME/jre/lib/i386/client  (Win/Linux 32-bit)
  *   * $JAVA_HOME/jre/lib/amd64/server (Win/Linux 64-bit)
  * 
- * If JAVA_HOME isn't set on the computer, RTI_HOME is used to link in with any JRE
+ * If JAVA_HOME isn't set on the computer, PORTICO_RTI_HOME is used to link in with any JRE
  * that Portico has shipped with.  
  */
 pair<string,string> Runtime::generateUnixPath( string rtihome ) throw( HLA::RTIinternalError )
@@ -364,7 +364,7 @@ pair<string,string> Runtime::generateUnixPath( string rtihome ) throw( HLA::RTIi
 	//////////////////////////////////
 	// 1. Set up the Java Classpath //
 	//////////////////////////////////
-	// pick up the system classpath and put $RTI_HOME/lib/portico.jar on the end
+	// pick up the system classpath and put $PORTICO_RTI_HOME/lib/portico.jar on the end
 	string systemClasspath( "./" );
 	if( getenv("CLASSPATH") != NULL )
 		systemClasspath = string( getenv("CLASSPATH") );
@@ -401,7 +401,7 @@ pair<string,string> Runtime::generateUnixPath( string rtihome ) throw( HLA::RTIi
 		string jrelocation( javaHome );
 	
 	// Portico ships a JRE with it, but we might be building in a development environment
-	// so check to see if RTI_HOME/jre is packaged first, then fallback on JAVA_HOME from above
+	// so check to see if PORTICO_RTI_HOME/jre is packaged first, then fallback on JAVA_HOME from above
 	string temp = string(rtihome).append( "/jre/bin/java" );
 	if( pathExists(temp) )
 	{

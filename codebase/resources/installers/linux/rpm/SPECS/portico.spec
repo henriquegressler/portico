@@ -50,10 +50,10 @@ cp -Rf * $RPM_BUILD_ROOT/%{installdir}
 #cp -Rf %{jrehome}/* $RPM_BUILD_ROOT/%{installdir}/jre/
 
 # update the scripts so that the appropriate information is supplied
-# 2. set the RTI_HOME (just add the RTI_HOME declaration to the top of the file)
-#sed -i s:JAVA=java:JAVA=java\\nRTI_HOME=%{installdir}: $RPM_BUILD_ROOT/%{installdir}/bin/portico
-#sed -i s:JAVA=java:JAVA=java\\nRTI_HOME=%{installdir}: $RPM_BUILD_ROOT/%{installdir}/bin/portico-embedded
-#sed -i s:JAVA=java:JAVA=java\\nRTI_HOME=%{installdir}: $RPM_BUILD_ROOT/%{installdir}/bin/rticonsole
+# 2. set the PORTICO_RTI_HOME (just add the PORTICO_RTI_HOME declaration to the top of the file)
+#sed -i s:JAVA=java:JAVA=java\\nPORTICO_RTI_HOME=%{installdir}: $RPM_BUILD_ROOT/%{installdir}/bin/portico
+#sed -i s:JAVA=java:JAVA=java\\nPORTICO_RTI_HOME=%{installdir}: $RPM_BUILD_ROOT/%{installdir}/bin/portico-embedded
+#sed -i s:JAVA=java:JAVA=java\\nPORTICO_RTI_HOME=%{installdir}: $RPM_BUILD_ROOT/%{installdir}/bin/rticonsole
 
 # 3. set the JAVA_HOME to the local JRE if the current JAVA_HOME env var isn't set
 #sed -i 's:echo WARNING Your JAVA_HOME environment variable is not set!:echo WARNING Your JAVA_HOME environment variable is not set. Using embedded version\n\tJAVA=%{installdir}/jre/bin/java:' $RPM_BUILD_ROOT/%{installdir}/bin/portico

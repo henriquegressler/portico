@@ -11,13 +11,13 @@ rem ################################
 if "%1" == "" goto usage
 
 rem ###################
-rem # Set up RTI_HOME #
+rem # Set up PORTICO_RTI_HOME #
 rem ###################
 :rtihome
 cd ..\..\..
-set RTI_HOME=%CD%
+set PORTICO_RTI_HOME=%CD%
 cd examples\cpp\hla13
-echo RTI_HOME environment variable is set to %RTI_HOME%
+echo PORTICO_RTI_HOME environment variable is set to %PORTICO_RTI_HOME%
 goto run
 
 :run
@@ -44,7 +44,7 @@ echo Compiling example federate
 rem comment out this line or edit if using different visual studio command prompt 
 call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\Common7\Tools\VsDevCmd" %-arch=amd64
 
-cl /I"%RTI_HOME%\include\hla13" /DRTI_USES_STD_FSTREAM /EHsc main.cpp ExampleCPPFederate.cpp ExampleFedAmb.cpp "%RTI_HOME%\lib\vc14_1\libRTI-NG64.lib" "%RTI_HOME%\lib\vc14_1\libFedTime64.lib"
+cl /I"%PORTICO_RTI_HOME%\include\hla13" /DRTI_USES_STD_FSTREAM /EHsc main.cpp ExampleCPPFederate.cpp ExampleFedAmb.cpp "%PORTICO_RTI_HOME%\lib\vc14_1\libRTI-NG64.lib" "%PORTICO_RTI_HOME%\lib\vc14_1\libFedTime64.lib"
 goto finish
 
 ############################################
@@ -52,7 +52,7 @@ goto finish
 ############################################
 :execute
 SHIFT
-set PATH=%RTI_HOME%\jre\bin\server;%RTI_HOME%\bin\vc14_1;%PATH%
+set PATH=%PORTICO_RTI_HOME%\jre\bin\server;%PORTICO_RTI_HOME%\bin\vc14_1;%PATH%
 main %1 %2 %3 %4 %5 %6 %7 %8 %9
 goto finish
 

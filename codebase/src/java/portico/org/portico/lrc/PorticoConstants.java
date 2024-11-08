@@ -94,7 +94,7 @@ public class PorticoConstants
 	//////////// System Property Names ////////////
 	///////////////////////////////////////////////
 	/** The name of the system property that represents the location of the Portico install */
-	public static final String PROPERTY_RTI_HOME = "rti.home";
+	public static final String PROPERTY_PORTICO_RTI_HOME = "rti.home";
 	
 	/** System property for identifying the portico plugin path */
 	public static final String PROPERTY_PLUGIN_PATH = "portico.pluginpath";
@@ -323,9 +323,9 @@ public class PorticoConstants
 	}
 	
 	/**
-	 * Gets the RTI_HOME value where Portico is installed. If the system property
-	 * {@link #PROPERTY_RTI_HOME} is set, that value will be used. If it isn't, this method will
-	 * check the <code>RTI_HOME</code> environment variable. If that is also not set, the current
+	 * Gets the PORTICO_RTI_HOME value where Portico is installed. If the system property
+	 * {@link #PROPERTY_PORTICO_RTI_HOME} is set, that value will be used. If it isn't, this method will
+	 * check the <code>PORTICO_RTI_HOME</code> environment variable. If that is also not set, the current
 	 * directory will be used.
 	 */
 	public static File getRtiHome()
@@ -335,8 +335,8 @@ public class PorticoConstants
 		if( location != null )
 			return new File( location );
 		
-		// check the RTI_HOME environment variable
-		location = System.getenv( PROPERTY_RTI_HOME );
+		// check the PORTICO_RTI_HOME environment variable
+		location = System.getenv( PROPERTY_PORTICO_RTI_HOME );
 		if( location != null )
 			return new File( location );
 		else

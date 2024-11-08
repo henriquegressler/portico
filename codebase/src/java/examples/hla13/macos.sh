@@ -24,15 +24,15 @@ else
 fi
 
 #####################
-# test for RTI_HOME #
+# test for PORTICO_RTI_HOME #
 #####################
-if [ "$RTI_HOME" = "" ]
+if [ "$PORTICO_RTI_HOME" = "" ]
 then
 	cd ../../../
-	RTI_HOME=$PWD
-	export RTI_HOME
+	PORTICO_RTI_HOME=$PWD
+	export PORTICO_RTI_HOME
 	cd examples/java/hla13
-	echo WARNING Your RTI_HOME environment variable is not set, assuming $RTI_HOME
+	echo WARNING Your PORTICO_RTI_HOME environment variable is not set, assuming $PORTICO_RTI_HOME
 fi
 
 ############################################
@@ -54,7 +54,7 @@ if [ $1 = "compile" ]
 then
 	echo "compiling example federate"
 	cd src
-	javac -cp ./:$RTI_HOME/lib/portico.jar hla13/*.java
+	javac -cp ./:$PORTICO_RTI_HOME/lib/portico.jar hla13/*.java
 	jar -cf ../java-hla13.jar hla13/*.class
 	cd ../
 	exit;	
@@ -66,7 +66,7 @@ fi
 if [ $1 = "execute" ]
 then
 	shift;
-	java -cp ./java-hla13.jar:$RTI_HOME/lib/portico.jar hla13.Example13Federate $*
+	java -cp ./java-hla13.jar:$PORTICO_RTI_HOME/lib/portico.jar hla13.Example13Federate $*
 	exit;
 fi
 

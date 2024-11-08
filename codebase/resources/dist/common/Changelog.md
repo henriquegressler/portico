@@ -95,7 +95,7 @@ v2.0.2 / 2015-12-31
 
  * `improve` Added ability to generate a sandbox that includes a JRE by calling the
              `sandbox.full` target. This is useful when building from source for use
-             with `RTI_HOME` directly set to the sandbox directory. (`#130`)
+             with `PORTICO_RTI_HOME` directly set to the sandbox directory. (`#130`)
 
 #### Bug Fixes
 
@@ -200,7 +200,7 @@ v2.0.0 / 2013-04-01
 
  * `feature` When starting Java with the Portico jar file, it will now print out
              version and system information before exiting. For example, issue
-             the following from `RTI_HOME`: `java -jar lib/portico.jar` to get
+             the following from `PORTICO_RTI_HOME`: `java -jar lib/portico.jar` to get
              output akin to:
 
   ```

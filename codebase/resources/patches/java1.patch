@@ -11508,17 +11508,17 @@ Index: codebase/src-java/example/hla13java1/win32.bat
 -goto rtihometest
 -
 -rem #####################
--rem # test for RTI_HOME #
+-rem # test for PORTICO_RTI_HOME #
 -rem #####################
 -:rtihometest
--if "%RTI_HOME%" == "" goto nortihome
--if not "%RTI_HOME%" == "" goto run
+-if "%PORTICO_RTI_HOME%" == "" goto nortihome
+-if not "%PORTICO_RTI_HOME%" == "" goto run
 -
 -:nortihome
 -cd ..\..\..
--set RTI_HOME=%CD%
+-set PORTICO_RTI_HOME=%CD%
 -cd examples\java\hla13java1
--echo WARNING Your RTI_HOME environment variable is not set, using %RTI_HOME%
+-echo WARNING Your PORTICO_RTI_HOME environment variable is not set, using %PORTICO_RTI_HOME%
 -goto run
 -
 -:run
@@ -11542,7 +11542,7 @@ Index: codebase/src-java/example/hla13java1/win32.bat
 -:compile
 -echo "compiling example federate"
 -cd src
--%JAVAC% -cp ".;%RTI_HOME%\lib\portico.jar" hla13java1\*.java
+-%JAVAC% -cp ".;%PORTICO_RTI_HOME%\lib\portico.jar" hla13java1\*.java
 -%JAR% -cf ..\java-hla13java1.jar hla13java1\*.class
 -cd ..
 -goto finish
@@ -11552,7 +11552,7 @@ Index: codebase/src-java/example/hla13java1/win32.bat
 -rem ############################################
 -:execute
 -SHIFT
--%JAVA% -cp "java-hla13java1.jar;%RTI_HOME%\lib\portico.jar" hla13java1.ExampleJava1Federate %1 %2 %3 %4 %5 %6 %7 %8 %9
+-%JAVA% -cp "java-hla13java1.jar;%PORTICO_RTI_HOME%\lib\portico.jar" hla13java1.ExampleJava1Federate %1 %2 %3 %4 %5 %6 %7 %8 %9
 -goto finish
 -
 -
@@ -11593,15 +11593,15 @@ Index: codebase/src-java/example/hla13java1/linux.sh
 -fi
 -
 -#####################
--# test for RTI_HOME #
+-# test for PORTICO_RTI_HOME #
 -#####################
--if [ "$RTI_HOME" = "" ]
+-if [ "$PORTICO_RTI_HOME" = "" ]
 -then
 -	cd ../../../
--	RTI_HOME=$PWD
--	export RTI_HOME
+-	PORTICO_RTI_HOME=$PWD
+-	export PORTICO_RTI_HOME
 -	cd examples/java/hla13java1
--	echo WARNING Your RTI_HOME environment variable is not set, assuming $RTI_HOME
+-	echo WARNING Your PORTICO_RTI_HOME environment variable is not set, assuming $PORTICO_RTI_HOME
 -fi
 -
 -############################################
@@ -11623,7 +11623,7 @@ Index: codebase/src-java/example/hla13java1/linux.sh
 -then
 -	echo "compiling example federate"
 -	cd src
--	javac -cp ./:$RTI_HOME/lib/portico.jar hla13java1/*.java
+-	javac -cp ./:$PORTICO_RTI_HOME/lib/portico.jar hla13java1/*.java
 -	jar -cf ../java-hla13java1.jar hla13java1/*.class
 -	cd ../
 -	exit;	
@@ -11635,7 +11635,7 @@ Index: codebase/src-java/example/hla13java1/linux.sh
 -if [ $1 = "execute" ]
 -then
 -	shift;
--	java -cp ./java-hla13java1.jar:$RTI_HOME/lib/portico.jar hla13java1.ExampleJava1Federate $*
+-	java -cp ./java-hla13java1.jar:$PORTICO_RTI_HOME/lib/portico.jar hla13java1.ExampleJava1Federate $*
 -	exit;
 -fi
 -

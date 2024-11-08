@@ -49,7 +49,7 @@ gauge the level of community interest in the project. You can sign up from the U
   When you have installed Portico, you will get a directory structure like so:
 
   ```
-  [RTI_HOME]
+  [PORTICO_RTI_HOME]
     |-- LICENSE.portico
     |-- README               (This file)
     |-- README-examples      (More information about the example federates)
@@ -84,18 +84,18 @@ gauge the level of community interest in the project. You can sign up from the U
   runtime you need to set your environment variables such that the Portico libraries can be
   found on your path.
 
-  Portico also uses the `RTI_HOME` environment variable as is convention for RTIs. If you are
+  Portico also uses the `PORTICO_RTI_HOME` environment variable as is convention for RTIs. If you are
   only use Java federates, this is the only variable you need to set. The others are necessary
   for C++/native federates as listed:
 
   ```
-  *   (all) RTI_HOME          : This should point to the same directory that this file is in
-  *  (java) CLASSPATH         : Add RTI_HOME/lib/portico.jar
-  * (win32) PATH              : Add %RTI_HOME%\bin\[compiler] and %RTI_HOME%\jre\bin\client
-  * (win64) PATH              : Add %RTI_HOME%\bin\[compiler] and %RTI_HOME%\jre\bin\server
-  * (mac64) DYLD_LIBRARY_PATH : Add $RTI_HOME/lib/[compiler] and $RTI_HOME/jre/lib/server
-  * (lin32) LD_LIBRARY_PATH   : Add $RTI_HOME/lib/[compiler] and $RTI_HOME/jre/lib/client
-  * (lin64) LD_LIBRARY_PATH   : Add $RTI_HOME/lib/[compiler] and $RTI_HOME/jre/lib/server
+  *   (all) PORTICO_RTI_HOME          : This should point to the same directory that this file is in
+  *  (java) CLASSPATH         : Add PORTICO_RTI_HOME/lib/portico.jar
+  * (win32) PATH              : Add %PORTICO_RTI_HOME%\bin\[compiler] and %PORTICO_RTI_HOME%\jre\bin\client
+  * (win64) PATH              : Add %PORTICO_RTI_HOME%\bin\[compiler] and %PORTICO_RTI_HOME%\jre\bin\server
+  * (mac64) DYLD_LIBRARY_PATH : Add $PORTICO_RTI_HOME/lib/[compiler] and $PORTICO_RTI_HOME/jre/lib/server
+  * (lin32) LD_LIBRARY_PATH   : Add $PORTICO_RTI_HOME/lib/[compiler] and $PORTICO_RTI_HOME/jre/lib/client
+  * (lin64) LD_LIBRARY_PATH   : Add $PORTICO_RTI_HOME/lib/[compiler] and $PORTICO_RTI_HOME/jre/lib/server
   ```
 
 ### The JVM Libraries
@@ -115,15 +115,15 @@ gauge the level of community interest in the project. You can sign up from the U
 
 ### Writing Java Federates
   All Portico code and all its dependencies are located in a single jar file. Just throw
-  `RTI_HOME/lib/portico.jar` on your classpath and you are good to go.
+  `PORTICO_RTI_HOME/lib/portico.jar` on your classpath and you are good to go.
 
 ### Writing C++ Federates
   The Portico C++ interfaces are binary drop-in compatible with HLA v1.3 and IEEE-1516e
   federates on Windows, Linux and Mac OS X. If you want to compile and link against Portico,
   you will need the following:
 
-  - Header files: Located in `RTI_HOME/include/[HLA-version]`
-  - Library files: Located in `RTI_HOME/lib/[compiler]`
+  - Header files: Located in `PORTICO_RTI_HOME/include/[HLA-version]`
+  - Library files: Located in `PORTICO_RTI_HOME/lib/[compiler]`
 
 #### Compiling on Windows
   When compiling C++ federates on Windows, you will need to have an appropriate version of

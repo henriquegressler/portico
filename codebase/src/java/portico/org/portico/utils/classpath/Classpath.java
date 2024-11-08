@@ -257,7 +257,7 @@ public class Classpath
 	 */
 	public URL getPortico()
 	{
-		String rtiHome = System.getenv( "RTI_HOME" );
+		String rtiHome = System.getenv( "PORTICO_RTI_HOME" );
 		File porticoJar = new File( rtiHome + "/lib/portico.jar" );
 		try
 		{

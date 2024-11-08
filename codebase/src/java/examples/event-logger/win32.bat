@@ -25,17 +25,17 @@ echo ERROR Your JAVA_HOME environment variable is not set!
 goto rtihometest
 
 rem #####################
-rem # test for RTI_HOME #
+rem # test for PORTICO_RTI_HOME #
 rem #####################
 :rtihometest
-if "%RTI_HOME%" == "" goto nortihome
-if not "%RTI_HOME%" == "" goto run
+if "%PORTICO_RTI_HOME%" == "" goto nortihome
+if not "%PORTICO_RTI_HOME%" == "" goto run
 
 :nortihome
 cd ..\..\..
-set RTI_HOME=%CD%
+set PORTICO_RTI_HOME=%CD%
 cd examples\java\event-logger
-echo WARNING Your RTI_HOME environment variable is not set, using %RTI_HOME%
+echo WARNING Your PORTICO_RTI_HOME environment variable is not set, using %PORTICO_RTI_HOME%
 goto run
 
 :run
@@ -59,7 +59,7 @@ rem ############################################
 :compile
 echo "compiling example federate"
 cd src
-%JAVAC% -cp ".;%RTI_HOME%\lib\portico.jar" *.java
+%JAVAC% -cp ".;%PORTICO_RTI_HOME%\lib\portico.jar" *.java
 %JAR% -cf ..\event-logger.jar *.class
 cd ..
 goto finish
@@ -69,7 +69,7 @@ rem ### (target) execute #######################
 rem ############################################
 :execute
 SHIFT
-%JAVA% -cp "event-logger.jar;%RTI_HOME%\lib\portico.jar" EventLogger %1 %2 %3 %4 %5 %6 %7 %8 %9
+%JAVA% -cp "event-logger.jar;%PORTICO_RTI_HOME%\lib\portico.jar" EventLogger %1 %2 %3 %4 %5 %6 %7 %8 %9
 goto finish
 
 

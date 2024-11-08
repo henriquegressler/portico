@@ -12,13 +12,13 @@ then
 fi
 
 #####################
-# test for RTI_HOME #
+# test for PORTICO_RTI_HOME #
 #####################
 cd ../../..
-RTI_HOME=$PWD
-export RTI_HOME
+PORTICO_RTI_HOME=$PWD
+export PORTICO_RTI_HOME
 cd examples/cpp/ieee1516e
-echo RTI_HOME environment variable is set to $RTI_HOME
+echo PORTICO_RTI_HOME environment variable is set to $PORTICO_RTI_HOME
 
 ############################################
 ### (target) clean #########################
@@ -37,7 +37,7 @@ fi
 if [ $1 = "compile" ]
 then
 	echo "compiling example federate"
-	g++ -g -stdlib=libstdc++ -fPIC -I$RTI_HOME/include/ieee1516e -lrti1516e64d -lfedtime1516e64d -L$RTI_HOME/lib/gcc4 \
+	g++ -g -stdlib=libstdc++ -fPIC -I$PORTICO_RTI_HOME/include/ieee1516e -lrti1516e64d -lfedtime1516e64d -L$PORTICO_RTI_HOME/lib/gcc4 \
 		main.cpp ExampleCPPFederate.cpp ExampleFedAmb.cpp -o example-federate
 	exit;	
 fi
@@ -58,7 +58,7 @@ fi
 if [ $1 = "execute" ]
 then
 	shift;
-	PORTICO_DEBUG=OFF DYLD_LIBRARY_PATH="$RTI_HOME/lib/gcc4:$RTI_HOME/jre/lib/server" ./example-federate $*
+	PORTICO_DEBUG=OFF DYLD_LIBRARY_PATH="$PORTICO_RTI_HOME/lib/gcc4:$PORTICO_RTI_HOME/jre/lib/server" ./example-federate $*
 	exit;
 fi
 

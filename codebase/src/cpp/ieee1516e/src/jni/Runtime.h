@@ -113,18 +113,18 @@ class Runtime
 		 * second is the library path (so the Java side can load the C++ side back).
 		 * 
 		 * Both the windows and unix version work in much the same way. For the classpath,
-		 * the system classpath is first loaded, with $RTI_HOME/lib/portico.jar appended
+		 * the system classpath is first loaded, with $PORTICO_RTI_HOME/lib/portico.jar appended
 		 * to the end. For the library path, the following is constructed:
 		 * 
 		 *   * System path (PATH, LD_LIBRARY_PATH, DYLD_LIBRARY_PATH as appropriate)
 		 *   * $PWD
-		 *   * $RTI_HOME/lib                   (Linux only)
-		 *   * $RTI_HOME/bin                   (Windows only)
+		 *   * $PORTICO_RTI_HOME/lib                   (Linux only)
+		 *   * $PORTICO_RTI_HOME/bin                   (Windows only)
 		 *   * $JAVA_HOME/jre/lib/server       (Mac OS X 64-bit)
 		 *   * $JAVA_HOME/jre/lib/i386/client  (Win/Linux 32-bit)
 		 *   * $JAVA_HOME/jre/lib/amd64/server (Win/Linux 64-bit)
 		 * 
-		 * If JAVA_HOME isn't set, RTI_HOME is assumed so that we can link in with the
+		 * If JAVA_HOME isn't set, PORTICO_RTI_HOME is assumed so that we can link in with the
 		 * JRE that Portico ships with.
 		 */
 		pair<string,string> generatePaths() throw( RTIinternalError );

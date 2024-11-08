@@ -109,14 +109,14 @@ public class NativeLibraryLoader
 			return;
 
 		// Couldn't find what we're after, see if we can do better manually trying to
-		// figure out what library to load via RTI_HOME
-		String rtiHome = System.getenv( "RTI_HOME" );
-		logger.debug( "Using RTI_HOME value: "+rtiHome );
+		// figure out what library to load via PORTICO_RTI_HOME
+		String rtiHome = System.getenv( "PORTICO_RTI_HOME" );
+		logger.debug( "Using PORTICO_RTI_HOME value: "+rtiHome );
 		if( rtiHome == null )
 			rtiHome = System.getProperty("user.dir"); // PWD
 		
 		logger.debug( "Could not load native libraries via system path, trying to auto-detect path" );
-		logger.debug( "Using RTI_HOME: "+rtiHome );
+		logger.debug( "Using PORTICO_RTI_HOME: "+rtiHome );
 
 		// try again
 		String compiler = PorticoConstants.getCppCompilerString();
@@ -126,7 +126,7 @@ public class NativeLibraryLoader
 		
 		// fail!
 		System.out.println( "ERROR (loadback) Could not locate IEEE-1516e C++ library ("+libraryName+".dll)" );
-		System.out.println( "ERROR (loadback) Make sure %RTI_HOME% is set and %RTI_HOME%\\bin\\[compiler] is on you %PATH%" );
+		System.out.println( "ERROR (loadback) Make sure %PORTICO_RTI_HOME% is set and %PORTICO_RTI_HOME%\\bin\\[compiler] is on you %PATH%" );
 		System.out.println( "      (loadback) Search path: "+System.getProperty("java.library.path") );
 	}
 	
@@ -159,7 +159,7 @@ public class NativeLibraryLoader
 			return;
 
 		System.out.println( "ERROR (loadback) Could not locate IEEE-1516e [HLA Evolved] C++ library ("+libraryDescription+")" );
-		System.out.println( "ERROR (loadback) Make sure $RTI_HOME is set and $RTI_HOME/lib/[compiler] is on you $LD_LIBRARY_PATH" );
+		System.out.println( "ERROR (loadback) Make sure $PORTICO_RTI_HOME is set and $PORTICO_RTI_HOME/lib/[compiler] is on you $LD_LIBRARY_PATH" );
 		System.out.println( "      (loadback) Search path: "+System.getProperty("java.library.path") );
 	}
 

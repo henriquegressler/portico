@@ -11,13 +11,13 @@ rem ################################
 if "%1" == "" goto usage
 
 rem ###################
-rem # Set up RTI_HOME #
+rem # Set up PORTICO_RTI_HOME #
 rem ###################
 :rtihome
 cd ..\..\..
-set RTI_HOME=%CD%
+set PORTICO_RTI_HOME=%CD%
 cd examples\cpp\ieee1516e
-echo RTI_HOME environment variable is set to %RTI_HOME%
+echo PORTICO_RTI_HOME environment variable is set to %PORTICO_RTI_HOME%
 goto run
 
 :run
@@ -40,7 +40,7 @@ goto finish
 ############################################
 :compile
 echo Compiling example federate
-cl /I"%RTI_HOME%\include\ieee1516e" /DRTI_USES_STD_FSTREAM /EHsc main.cpp ExampleCPPFederate.cpp ExampleFedAmb.cpp "%RTI_HOME%\lib\vc10\librti1516e.lib" "%RTI_HOME%\lib\vc10\libfedtime1516e.lib"
+cl /I"%PORTICO_RTI_HOME%\include\ieee1516e" /DRTI_USES_STD_FSTREAM /EHsc main.cpp ExampleCPPFederate.cpp ExampleFedAmb.cpp "%PORTICO_RTI_HOME%\lib\vc10\librti1516e.lib" "%PORTICO_RTI_HOME%\lib\vc10\libfedtime1516e.lib"
 goto finish
 
 ############################################
@@ -48,7 +48,7 @@ goto finish
 ############################################
 :execute
 SHIFT
-set PATH=%RTI_HOME%\jre\bin\client;%RTI_HOME%\bin\vc10;%PATH%
+set PATH=%PORTICO_RTI_HOME%\jre\bin\client;%PORTICO_RTI_HOME%\bin\vc10;%PATH%
 main %1 %2 %3 %4 %5 %6 %7 %8 %9
 goto finish
 

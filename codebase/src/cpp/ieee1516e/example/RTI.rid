@@ -126,7 +126,7 @@
 # (3.1) Portico Plugin Path
 #        This is a path that should be searched for Portico plugins. The format is a ";" separated
 #        list of locations for windows, or a ":" separated list for *nix. The default value is empty.
-#        (NOTE) Two locations are *ALWAYS* searched: ./plugins and $RTI_HOME/plugins
+#        (NOTE) Two locations are *ALWAYS* searched: ./plugins and $PORTICO_RTI_HOME/plugins
 #
 # portico.pluginpath = /opt/portico/plugins
 

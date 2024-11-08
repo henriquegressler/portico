@@ -12,13 +12,13 @@ then
 fi
 
 ###################
-# Set up RTI_HOME #
+# Set up PORTICO_RTI_HOME #
 ###################
 cd ../../..
-RTI_HOME=$PWD
-export RTI_HOME
+PORTICO_RTI_HOME=$PWD
+export PORTICO_RTI_HOME
 cd examples/cpp/ieee1516e
-echo RTI_HOME environment variable is set to $RTI_HOME
+echo PORTICO_RTI_HOME environment variable is set to $PORTICO_RTI_HOME
 
 ############################################
 ### (target) clean #########################
@@ -37,10 +37,10 @@ fi
 if [ $1 = "compile" ]
 then
 	echo "compiling example federate"
-	g++ -O1 -fPIC -I$RTI_HOME/include/ieee1516e \
+	g++ -O1 -fPIC -I$PORTICO_RTI_HOME/include/ieee1516e \
 	    -DRTI_USES_STD_FSTREAM \
 	    main.cpp ExampleCPPFederate.cpp ExampleFedAmb.cpp -o example-federate \
-	    -L$RTI_HOME/lib/gcc8 -lrti1516e64 -lfedtime1516e64 \
+	    -L$PORTICO_RTI_HOME/lib/gcc8 -lrti1516e64 -lfedtime1516e64 \
 	    -L$JAVA_HOME/lib/server -ljvm -ljsig
 	exit;	
 fi
@@ -61,7 +61,7 @@ fi
 if [ $1 = "execute" ]
 then
 	shift;
-	LD_LIBRARY_PATH="$RTI_HOME/lib/gcc8:$JAVA_HOME/lib/server" ./example-federate $*
+	LD_LIBRARY_PATH="$PORTICO_RTI_HOME/lib/gcc8:$JAVA_HOME/lib/server" ./example-federate $*
 	exit;
 fi
 

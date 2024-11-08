@@ -24,10 +24,10 @@ Portico Example Federates
   can also show you what variables you need to set up in your environment to get Portico operating
   correctly.
 
-  - Java HLA 1.3:   `RTI_HOME/examples/java/hla13`
-  - Java IEE-1516e: `RTI_HOME/examples/java/ieee1516e`
-  - C++ HLA 1.3     `RTI_HOME/examples/cpp/hla13`
-  - C++ IEE-1516e:  `RTI_HOME/examples/cpp/ieee1516e`
+  - Java HLA 1.3:   `PORTICO_RTI_HOME/examples/java/hla13`
+  - Java IEE-1516e: `PORTICO_RTI_HOME/examples/java/ieee1516e`
+  - C++ HLA 1.3     `PORTICO_RTI_HOME/examples/cpp/hla13`
+  - C++ IEE-1516e:  `PORTICO_RTI_HOME/examples/cpp/ieee1516e`
 
 
 2. The Example Federate
@@ -93,21 +93,21 @@ Portico Example Federates
 ### Windows C++ Example
   ```
   -- Open Visual Studio Command Prompt --
-  $ cd %RTI_HOME\examples\cpp\ieee1516e
+  $ cd %PORTICO_RTI_HOME\examples\cpp\ieee1516e
   $ win64-vc10 compile
   $ win64-vc10 execute
   ```
 
 ### Linux C++ Example
   ```
-  $ cd $RTI_HOME/examples/cpp/ieee1516e
+  $ cd $PORTICO_RTI_HOME/examples/cpp/ieee1516e
   $ ./linux64.sh compile
   $ ./linux64.sh execute federateTwo
   ```
 
 ### Mac OS X C++ Example
   ```
-  $ cd $RTI_HOME/examples/cpp/ieee1516e
+  $ cd $PORTICO_RTI_HOME/examples/cpp/ieee1516e
   $ ./macos.sh compile
   $ ./macos.sh execute federateTwo
   ```
@@ -149,7 +149,7 @@ Portico Example Federates
   see output something like the following:
 
   ```
-  RTI_HOME environment variable is set to /opt/portico-2.1.0
+  PORTICO_RTI_HOME environment variable is set to /opt/portico-2.1.0
 
   -------------------------------------------------------------------
   GMS: address=zapp-48803, cluster=ExampleFederation, physical address=192.168.0.10:63529

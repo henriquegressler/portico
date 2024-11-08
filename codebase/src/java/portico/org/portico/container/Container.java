@@ -202,11 +202,11 @@ public class Container
 	 * this path from the system propery {@link PorticoConstants#PROPERTY_PLUGIN_PATH} (typically
 	 * set through the RID file).
 	 * <p/>
-	 * Note that if the environment variable RTI_HOME is set, the location RTI_HOME/plugins
+	 * Note that if the environment variable PORTICO_RTI_HOME is set, the location PORTICO_RTI_HOME/plugins
 	 * will always be added to the search path (after a test to ensure it exists). If a location on
 	 * the provided path doesn't exist or can't be read, an exception will be thrown.
 	 * <p/>
-	 * <b>NOTE:</b> The directory $RTI_HOME/plugins will ALWAYS be added to the search path (if,
+	 * <b>NOTE:</b> The directory $PORTICO_RTI_HOME/plugins will ALWAYS be added to the search path (if,
 	 *              it exists) regardless of whether another path is specified or not.
 	 * 
 	 * @return An array of all the locations to search for plugins
@@ -246,7 +246,7 @@ public class Container
 		if( localLocation.exists() && localLocation.canRead() )
 			paths.add( getCanonicalFile(localLocation) );
 		
-		String rtiHome = System.getenv( "RTI_HOME" );
+		String rtiHome = System.getenv( "PORTICO_RTI_HOME" );
 		if( rtiHome != null )
 		{
 			File defaultLocation = new File( rtiHome + pathSeparator + "plugins" );

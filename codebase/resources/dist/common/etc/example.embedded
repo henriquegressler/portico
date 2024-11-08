@@ -15,7 +15,7 @@ com.example.MyFederate argumentOne argumentTwo ...
 com.example.MyOtherFederate
 
 # Invoking the embedded executor requires executing
-# the embedded jar file located in [RTI_HOME]/lib/portico-embedded.jar
+# the embedded jar file located in [PORTICO_RTI_HOME]/lib/portico-embedded.jar
 # For example:
 # java -jar lib/portico-embedded.jar -file:etc/embedded.example
 #
@@ -23,7 +23,7 @@ com.example.MyOtherFederate
 #
 # bin/portico-embedded -file:etc/example.embedded
 #
-# NOTE: The script will make use of your RTI_HOME variable so you can keep
+# NOTE: The script will make use of your PORTICO_RTI_HOME variable so you can keep
 #       all the configuration/plugins/etc... in the one spot but invoke it
 #       from anywhere.
 

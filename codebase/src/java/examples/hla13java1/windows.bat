@@ -25,17 +25,17 @@ echo ERROR Your JAVA_HOME environment variable is not set!
 goto rtihometest
 
 rem #####################
-rem # test for RTI_HOME #
+rem # test for PORTICO_RTI_HOME #
 rem #####################
 :rtihometest
-if "%RTI_HOME%" == "" goto nortihome
-if not "%RTI_HOME%" == "" goto run
+if "%PORTICO_RTI_HOME%" == "" goto nortihome
+if not "%PORTICO_RTI_HOME%" == "" goto run
 
 :nortihome
 cd ..\..\..
-set RTI_HOME=%CD%
+set PORTICO_RTI_HOME=%CD%
 cd examples\java\hla13java1
-echo WARNING Your RTI_HOME environment variable is not set, using %RTI_HOME%
+echo WARNING Your PORTICO_RTI_HOME environment variable is not set, using %PORTICO_RTI_HOME%
 goto run
 
 :run
@@ -59,7 +59,7 @@ rem ############################################
 :compile
 echo "compiling example federate"
 cd src
-%JAVAC% -cp ".;%RTI_HOME%\lib\portico.jar" hla13java1\*.java
+%JAVAC% -cp ".;%PORTICO_RTI_HOME%\lib\portico.jar" hla13java1\*.java
 %JAR% -cf ..\java-hla13java1.jar hla13java1\*.class
 cd ..
 goto finish
@@ -69,7 +69,7 @@ rem ### (target) execute #######################
 rem ############################################
 :execute
 SHIFT
-%JAVA% -cp "java-hla13java1.jar;%RTI_HOME%\lib\portico.jar" hla13java1.ExampleJava1Federate %1 %2 %3 %4 %5 %6 %7 %8 %9
+%JAVA% -cp "java-hla13java1.jar;%PORTICO_RTI_HOME%\lib\portico.jar" hla13java1.ExampleJava1Federate %1 %2 %3 %4 %5 %6 %7 %8 %9
 goto finish
 
 
