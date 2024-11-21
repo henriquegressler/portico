@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.portico.lrc.model.ObjectModel;
+import org.portico.lrc.model.RTIPolicy;
 import org.portico.utils.messaging.PorticoMessage;
 
 /**
@@ -39,6 +40,7 @@ public class CreateFederation extends PorticoMessage
 	private String federationName;
 	private transient List<URL> fomModules;
 	private ObjectModel objectModel;
+	private RTIPolicy rtiPolicy;
 
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
@@ -105,6 +107,14 @@ public class CreateFederation extends PorticoMessage
 	{
 		return this.fomModules;
 	}
+
+	public void setPolicy(RTIPolicy policy) {
+        this.rtiPolicy = policy;
+    }
+
+    public RTIPolicy getPolicy() {
+        return this.rtiPolicy;
+    }
 
 	//----------------------------------------------------------
 	//                     STATIC METHODS

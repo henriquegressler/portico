@@ -14,6 +14,7 @@
  */
 package org.portico.impl.hla1516e;
 
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -103,6 +104,7 @@ import org.portico.lrc.model.ICMetadata;
 import org.portico.lrc.model.OCInstance;
 import org.portico.lrc.model.OCMetadata;
 import org.portico.lrc.model.ObjectModel;
+import org.portico.lrc.model.RTIPolicy;
 import org.portico.lrc.services.federation.msg.CreateFederation;
 import org.portico.lrc.services.federation.msg.DestroyFederation;
 import org.portico.lrc.services.federation.msg.JoinFederation;
@@ -256,6 +258,33 @@ public class Rti1516eAmbassador implements RTIambassador
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
 		CreateFederation request = new CreateFederation( executionName, fomModule );
+
+	    // Carregar e validar o RTIPolicy.xml
+		try {
+			// Obter o diretório do primeiro módulo FOM
+			File fomDirectory = new File(fomModule.toURI()).getParentFile();
+			File policyFile = new File(fomDirectory, "RTIPolicy.xml");
+	
+			if (policyFile.exists()) {
+				// Carregar a política
+				RTIPolicy policy = new RTIPolicy(policyFile.getAbsolutePath());
+				logger.info("RTIPolicy carregada de: " + policyFile.getAbsolutePath());
+	
+				// Validar a federação (opcional, depende das políticas desejadas)
+				if (!policy.isFederateAllowed(executionName, "DEFAULT")) {
+					throw new RTIinternalError("A federação '" + executionName + "' não é permitida pela política.");
+				}
+	
+				// Associar a política ao pedido
+				request.setPolicy(policy);
+			} else {
+				logger.warn("RTIPolicy.xml não encontrado em: " + fomDirectory.getAbsolutePath());
+			}
+		} catch (Exception e) {
+			logger.error("Erro ao carregar RTIPolicy.xml: " + e.getMessage(), e);
+			throw new RTIinternalError("Erro ao carregar RTIPolicy", e);
+		}
+
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -312,6 +341,33 @@ public class Rti1516eAmbassador implements RTIambassador
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
 		CreateFederation request = new CreateFederation( federationName, fomModules );
+
+		// Carregar e validar o RTIPolicy.xml
+		try {
+			// Obter o diretório do primeiro módulo FOM
+			File fomDirectory = new File(fomModules[0].toURI()).getParentFile();
+			File policyFile = new File(fomDirectory, "RTIPolicy.xml");
+
+			if (policyFile.exists()) {
+				// Carregar a política
+				RTIPolicy policy = new RTIPolicy(policyFile.getAbsolutePath());
+				logger.info("RTIPolicy carregada de: " + policyFile.getAbsolutePath());
+
+				// Validar a federação (opcional, depende das políticas desejadas)
+				if (!policy.isFederateAllowed(federationName, "DEFAULT")) {
+					throw new RTIinternalError("A federação '" + federationName + "' não é permitida pela política.");
+				}
+
+				// Associar a política ao pedido
+				request.setPolicy(policy);
+			} else {
+				logger.warn("RTIPolicy.xml não encontrado em: " + fomDirectory.getAbsolutePath());
+			}
+		} catch (Exception e) {
+			logger.error("Erro ao carregar RTIPolicy.xml: " + e.getMessage(), e);
+			throw new RTIinternalError("Erro ao carregar RTIPolicy", e);
+		}
+
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////

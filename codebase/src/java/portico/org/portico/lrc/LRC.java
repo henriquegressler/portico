@@ -112,6 +112,30 @@ public class LRC
 	}
 
 	//----------------------------------------------------------
+	//-----------Topic Based Profile Access Control-------------
+	//----------------------------------------------------------
+	private PolicyManager policyManager;
+    private Map<Integer, Profile> federateProfiles = new HashMap<>();
+
+    public LRC(String policyFilePath) throws Exception {
+        this.policyManager = new PolicyManager(policyFilePath);
+    }
+
+	public void registerFederate(int federateHandle, String federateName) {
+        Profile profile = policyManager.getProfileForFederate(federateName);
+        if (profile != null) {
+            federateProfiles.put(federateHandle, profile);
+            System.out.println("Federate " + federateName + " assigned to profile " + profile.getName());
+        } else {
+            throw new IllegalArgumentException("No profile found for federate: " + federateName);
+        }
+    }
+
+    public Profile getFederateProfile(int federateHandle) {
+        return federateProfiles.get(federateHandle);
+    }
+
+	//----------------------------------------------------------
 	//                    STATIC VARIABLES
 	//----------------------------------------------------------
 

@@ -14,11 +14,13 @@
  */
 package org.portico.lrc.services.federation.msg;
 
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
+import org.apache.log4j.Logger;
 import org.portico.lrc.model.ObjectModel;
+import org.portico.lrc.model.RTIPolicy;
 import org.portico.utils.messaging.PorticoMessage;
 
 public class JoinFederation extends PorticoMessage
@@ -37,6 +39,8 @@ public class JoinFederation extends PorticoMessage
 
 	private transient List<URL> fomModules;
 	private transient ObjectModel fom;
+	private transient RTIPolicy rtiPolicy;
+	protected Logger logger;
 
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
@@ -48,6 +52,8 @@ public class JoinFederation extends PorticoMessage
 		this.setImmediateProcessingFlag( true );
 		this.joinModules = new ArrayList<ObjectModel>();
 		this.fomModules = new ArrayList<URL>();
+		this.rtiPolicy = null;
+		this.logger = Logger.getLogger("portico.lrc.services.federation.msg.JoinFederation");
 	}
 
 	public JoinFederation( String federationName, String federateName )
@@ -62,8 +68,23 @@ public class JoinFederation extends PorticoMessage
 		this( federationName, federateName );
 		if( fomModules != null )
 		{
-    		for( URL module : fomModules )
+    		for( URL module : fomModules ){
     			this.fomModules.add( module );
+				System.out.println( "syso >>>>> Adding FOM Module: " + module );
+				this.logger.info("Adding FOM Module: " + module);
+			}
+
+			try {
+				File policyFile = new File("RTIpolicy.xml");
+				if (policyFile.exists()) {
+					this.rtiPolicy = new RTIPolicy(policyFile.getPath());
+				} else {
+					this.logger.warn("RTIPolicy.xml not found");
+				}
+			}
+			catch( Exception e ) {
+				this.logger.error("Problem loading RTIPolicy.xml", e);
+			}
 		}
 	}
 

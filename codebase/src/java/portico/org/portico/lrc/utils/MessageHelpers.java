@@ -77,7 +77,7 @@ public class MessageHelpers
 	}
 	
 	/**
-	 * Convert the provided into into a byte[] and write the values into the given buffer starting
+	 * Convert the provided int into a byte[] and write the values into the given buffer starting
 	 * at the provided offset (this will take up 4 bytes!)
 	 */
 	public static void intToByteArray( int value, byte[] buffer, int offset )

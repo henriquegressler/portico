@@ -22,6 +22,7 @@ import java.util.Set;
 
 import org.portico.lrc.LRCState;
 import org.portico.lrc.PorticoConstants;
+import org.portico.lrc.Profile;
 import org.portico.lrc.compat.JAttributeNotDefined;
 import org.portico.lrc.compat.JInteractionClassNotDefined;
 import org.portico.lrc.compat.JInteractionClassNotPublished;
@@ -616,6 +617,10 @@ public class InterestManager implements SaveRestoreTarget
 		       JAttributeNotDefined,
 		       JRTIinternalError
 	{
+		// Profile profile = getFederateProfile(federateHandle);
+		// if (profile == null || !profile.hasAccess("topic_name", "pb")) {
+		// 	throw new SecurityException("Federate not allowed to publish this topic");
+		// }
 		register( pObjects, "PUBLISH-OBJECT", federateHandle, classHandle, attributes );
 	}
 
