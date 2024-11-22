@@ -168,7 +168,8 @@ public class Rti1516eAmbassador implements RTIambassador
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
 	//----------------------------------------------------------
-	public Rti1516eAmbassador() throws RTIinternalError
+	public Rti1516eAmbassador()
+	    throws RTIinternalError
 	{
 		this.helper = new Impl1516eHelper();
 		this.logger = this.helper.getLrcLogger();
@@ -189,29 +190,28 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 4.2
 	public void connect( FederateAmbassador federateReference,
 	                     CallbackModel callbackModel,
-	                     String localSettingsDesignator )
-	    throws ConnectionFailed,
-	           InvalidLocalSettingsDesignator,
-	           UnsupportedCallbackModel,
-	           AlreadyConnected,
-	           CallNotAllowedFromWithinCallback,
-	           RTIinternalError
+	                     String localSettingsDesignator ) throws ConnectionFailed,
+	                                                      InvalidLocalSettingsDesignator,
+	                                                      UnsupportedCallbackModel,
+	                                                      AlreadyConnected,
+	                                                      CallNotAllowedFromWithinCallback,
+	                                                      RTIinternalError
 	{
 		this.connect( federateReference, callbackModel );
 	}
 
 	// 4.2
-	public void connect( FederateAmbassador federateReference, CallbackModel callbackModel )
-	    throws ConnectionFailed,
-	           InvalidLocalSettingsDesignator,
-	           UnsupportedCallbackModel,
-	           AlreadyConnected,
-	           CallNotAllowedFromWithinCallback,
-	           RTIinternalError
+	public void connect( FederateAmbassador federateReference,
+	                     CallbackModel callbackModel ) throws ConnectionFailed,
+	                                                   InvalidLocalSettingsDesignator,
+	                                                   UnsupportedCallbackModel,
+	                                                   AlreadyConnected,
+	                                                   CallNotAllowedFromWithinCallback,
+	                                                   RTIinternalError
 	{
 		// check to make sure we're not already connected
 		if( helper.getFederateAmbassador() != null )
-			throw new AlreadyConnected("");
+			throw new AlreadyConnected( "" );
 
 		// set the callback model on the LRC approrpriately
 		this.helper.setCallbackModel( callbackModel );
@@ -219,70 +219,78 @@ public class Rti1516eAmbassador implements RTIambassador
 			helper.getLrc().disableImmediateCallbackProcessing();
 		else if( callbackModel == CallbackModel.HLA_IMMEDIATE )
 			helper.getLrc().enableImmediateCallbackProcessing();
-	
+
 		// store the FederateAmbassador for now, we'll stick it on the join call shortly
 		this.helper.connected( federateReference );
 	}
 
 	// 4.3
-	public void disconnect()
-		throws FederateIsExecutionMember,
-		       CallNotAllowedFromWithinCallback,
-		       RTIinternalError
+	public void disconnect() throws FederateIsExecutionMember,
+	                         CallNotAllowedFromWithinCallback,
+	                         RTIinternalError
 	{
 		// make sure we're not currently involved in a federation
 		if( helper.getState().isJoined() )
 		{
-			throw new FederateIsExecutionMember( "Can't disconnect. Joined to federation ["+
-			                                     helper.getState().getFederationName()+"]" );
+			throw new FederateIsExecutionMember( "Can't disconnect. Joined to federation [" +
+			                                     helper.getState().getFederationName() + "]" );
 		}
-		
+
 		// remove our federate ambassador reference to signal we're "disconnected" :P
 		this.helper.disconnected();
-		
+
 		// turn off the immediate callback handler if we have to
 		if( helper.getCallbackModel() == CallbackModel.HLA_IMMEDIATE )
 			helper.getLrc().disableImmediateCallbackProcessing();
 	}
 
 	// 4.5
-	public void createFederationExecution( String executionName, URL fomModule )
-		throws InconsistentFDD,
-		       ErrorReadingFDD,
-		       CouldNotOpenFDD,
-		       FederationExecutionAlreadyExists,
-		       NotConnected,
-		       RTIinternalError
+	public void createFederationExecution( String executionName,
+	                                       URL fomModule ) throws InconsistentFDD,
+	                                                       ErrorReadingFDD,
+	                                                       CouldNotOpenFDD,
+	                                                       FederationExecutionAlreadyExists,
+	                                                       NotConnected,
+	                                                       RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
 		CreateFederation request = new CreateFederation( executionName, fomModule );
 
-	    // Carregar e validar o RTIPolicy.xml
-		try {
+		// Carregar e validar o RTIPolicy.xml
+		try
+		{
 			// Obter o diretório do primeiro módulo FOM
-			File fomDirectory = new File(fomModule.toURI()).getParentFile();
-			File policyFile = new File(fomDirectory, "RTIPolicy.xml");
-	
-			if (policyFile.exists()) {
+			File fomDirectory = new File( fomModule.toURI() ).getParentFile();
+			File policyFile = new File( fomDirectory, "RTIPolicy.xml" );
+
+			if( policyFile.exists() )
+			{
 				// Carregar a política
-				RTIPolicy policy = new RTIPolicy(policyFile.getAbsolutePath());
-				logger.info("RTIPolicy carregada de: " + policyFile.getAbsolutePath());
-	
-				// Validar a federação (opcional, depende das políticas desejadas)
-				if (!policy.isFederateAllowed(executionName, "DEFAULT")) {
-					throw new RTIinternalError("A federação '" + executionName + "' não é permitida pela política.");
+				RTIPolicy policy = new RTIPolicy( policyFile.getAbsolutePath() );
+				logger.info( "RTIPolicy carregada de: " + policyFile.getAbsolutePath() );
+				logger.info( "Hash SHA256 do arquivo de politica: " + policy.getPolicyFileHash() );
+
+				// Validar a federação 
+				if( !policy.isFederateAllowed( executionName, policy.getFederationName() ) )
+				{
+					throw new RTIinternalError( "A federação '" + executionName +
+					                            "' não é permitida pela política." );
 				}
-	
+
 				// Associar a política ao pedido
-				request.setPolicy(policy);
-			} else {
-				logger.warn("RTIPolicy.xml não encontrado em: " + fomDirectory.getAbsolutePath());
+				request.setPolicy( policy );
 			}
-		} catch (Exception e) {
-			logger.error("Erro ao carregar RTIPolicy.xml: " + e.getMessage(), e);
-			throw new RTIinternalError("Erro ao carregar RTIPolicy", e);
+			else
+			{
+				logger.warn( "RTIPolicy.xml não encontrado em: " + fomDirectory.getAbsolutePath() );
+			}
+		}
+		catch( Exception e )
+		{
+			logger.error( "Erro ao carregar RTIPolicy.xml: " + e.getMessage(), e );
+			throw new RTIinternalError( "Erro ao carregar RTIPolicy", e );
 		}
 
 		ResponseMessage response = processMessage( request );
@@ -300,14 +308,15 @@ public class Rti1516eAmbassador implements RTIambassador
 		{
 			// an exception was caused :(
 			Throwable theException = ((ErrorResponse)response).getCause();
-			
+
 			if( theException instanceof JRTIinternalError )
 			{
 				throw new RTIinternalError( theException.getMessage(), theException );
 			}
 			else if( theException instanceof JFederationExecutionAlreadyExists )
 			{
-				throw new FederationExecutionAlreadyExists( theException.getMessage(), theException );
+				throw new FederationExecutionAlreadyExists( theException.getMessage(),
+				                                            theException );
 			}
 			else if( theException instanceof JInconsistentFDD )
 			{
@@ -329,13 +338,13 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 4.5
-	public void createFederationExecution( String federationName, URL[] fomModules )
-		throws InconsistentFDD,
-		       ErrorReadingFDD,
-		       CouldNotOpenFDD,
-		       FederationExecutionAlreadyExists,
-		       NotConnected,
-		       RTIinternalError
+	public void createFederationExecution( String federationName,
+	                                       URL[] fomModules ) throws InconsistentFDD,
+	                                                          ErrorReadingFDD,
+	                                                          CouldNotOpenFDD,
+	                                                          FederationExecutionAlreadyExists,
+	                                                          NotConnected,
+	                                                          RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -343,29 +352,38 @@ public class Rti1516eAmbassador implements RTIambassador
 		CreateFederation request = new CreateFederation( federationName, fomModules );
 
 		// Carregar e validar o RTIPolicy.xml
-		try {
+		try
+		{
 			// Obter o diretório do primeiro módulo FOM
-			File fomDirectory = new File(fomModules[0].toURI()).getParentFile();
-			File policyFile = new File(fomDirectory, "RTIPolicy.xml");
+			File fomDirectory = new File( fomModules[0].toURI() ).getParentFile();
+			File policyFile = new File( fomDirectory, "RTIPolicy.xml" );
 
-			if (policyFile.exists()) {
+			if( policyFile.exists() )
+			{
 				// Carregar a política
-				RTIPolicy policy = new RTIPolicy(policyFile.getAbsolutePath());
-				logger.info("RTIPolicy carregada de: " + policyFile.getAbsolutePath());
+				RTIPolicy policy = new RTIPolicy( policyFile.getAbsolutePath() );
+				logger.info( "RTIPolicy carregada de: " + policyFile.getAbsolutePath() );
+				logger.info( "Hash SHA256 do arquivo de politica: " + policy.getPolicyFileHash() );
 
-				// Validar a federação (opcional, depende das políticas desejadas)
-				if (!policy.isFederateAllowed(federationName, "DEFAULT")) {
-					throw new RTIinternalError("A federação '" + federationName + "' não é permitida pela política.");
+				// Validar a federação 
+				if( !policy.isFederationAllowed( federationName ) )
+				{
+					throw new RTIinternalError( "A federação '" + federationName +
+					                            "' não é permitida pela política." );
 				}
 
 				// Associar a política ao pedido
-				request.setPolicy(policy);
-			} else {
-				logger.warn("RTIPolicy.xml não encontrado em: " + fomDirectory.getAbsolutePath());
+				request.setPolicy( policy );
 			}
-		} catch (Exception e) {
-			logger.error("Erro ao carregar RTIPolicy.xml: " + e.getMessage(), e);
-			throw new RTIinternalError("Erro ao carregar RTIPolicy", e);
+			else
+			{
+				logger.warn( "RTIPolicy.xml não encontrado em: " + fomDirectory.getAbsolutePath() );
+			}
+		}
+		catch( Exception e )
+		{
+			logger.error( "Erro ao carregar RTIPolicy.xml: " + e.getMessage(), e );
+			throw new RTIinternalError( "Erro ao carregar RTIPolicy", e );
 		}
 
 		ResponseMessage response = processMessage( request );
@@ -383,14 +401,15 @@ public class Rti1516eAmbassador implements RTIambassador
 		{
 			// an exception was caused :(
 			Throwable theException = ((ErrorResponse)response).getCause();
-			
+
 			if( theException instanceof JRTIinternalError )
 			{
 				throw new RTIinternalError( theException.getMessage(), theException );
 			}
 			else if( theException instanceof JFederationExecutionAlreadyExists )
 			{
-				throw new FederationExecutionAlreadyExists( theException.getMessage(), theException );
+				throw new FederationExecutionAlreadyExists( theException.getMessage(),
+				                                            theException );
 			}
 			else if( theException instanceof JInconsistentFDD )
 			{
@@ -412,16 +431,17 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 4.5
-	public void createFederationExecution( String federationName, URL[] fomModules, URL mimModule )
-	    throws InconsistentFDD,
-	           ErrorReadingFDD,
-	           CouldNotOpenFDD,
-	           ErrorReadingMIM,
-	           CouldNotOpenMIM,
-	           DesignatorIsHLAstandardMIM,
-	           FederationExecutionAlreadyExists,
-	           NotConnected,
-	           RTIinternalError
+	public void createFederationExecution( String federationName,
+	                                       URL[] fomModules,
+	                                       URL mimModule ) throws InconsistentFDD,
+	                                                       ErrorReadingFDD,
+	                                                       CouldNotOpenFDD,
+	                                                       ErrorReadingMIM,
+	                                                       CouldNotOpenMIM,
+	                                                       DesignatorIsHLAstandardMIM,
+	                                                       FederationExecutionAlreadyExists,
+	                                                       NotConnected,
+	                                                       RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -448,14 +468,15 @@ public class Rti1516eAmbassador implements RTIambassador
 		{
 			// an exception was caused :(
 			Throwable theException = ((ErrorResponse)response).getCause();
-			
+
 			if( theException instanceof JRTIinternalError )
 			{
 				throw new RTIinternalError( theException.getMessage(), theException );
 			}
 			else if( theException instanceof JFederationExecutionAlreadyExists )
 			{
-				throw new FederationExecutionAlreadyExists( theException.getMessage(), theException );
+				throw new FederationExecutionAlreadyExists( theException.getMessage(),
+				                                            theException );
 			}
 			else if( theException instanceof JInconsistentFDD )
 			{
@@ -477,23 +498,24 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 4.5
-	public void createFederationExecution( String federationName, URL[] fomModules, String timeName )
-	    throws CouldNotCreateLogicalTimeFactory,
-	           InconsistentFDD,
-	           ErrorReadingFDD,
-	           CouldNotOpenFDD,
-	           FederationExecutionAlreadyExists,
-	           NotConnected,
-	           RTIinternalError
+	public void createFederationExecution( String federationName,
+	                                       URL[] fomModules,
+	                                       String timeName ) throws CouldNotCreateLogicalTimeFactory,
+	                                                         InconsistentFDD,
+	                                                         ErrorReadingFDD,
+	                                                         CouldNotOpenFDD,
+	                                                         FederationExecutionAlreadyExists,
+	                                                         NotConnected,
+	                                                         RTIinternalError
 	{
 		// validate the time type, ensuring it is one of the standard ones
-		if( timeName != null && (timeName.trim().equals("") == false) )
+		if( timeName != null && (timeName.trim().equals( "" ) == false) )
 		{
 			timeName = timeName.trim();
-			if( timeName.equals("HLAfloat64Time") == false &&
-				timeName.equals("HLAinteger64Time") == false )
+			if( timeName.equals( "HLAfloat64Time" ) == false &&
+			    timeName.equals( "HLAinteger64Time" ) == false )
 			{
-				throw new CouldNotCreateLogicalTimeFactory( "Invalid time implementation: Must be "+
+				throw new CouldNotCreateLogicalTimeFactory( "Invalid time implementation: Must be " +
 				                                            "\"HLAfloat64Time\" or \"HLAinteger64Time\"" );
 			}
 		}
@@ -506,26 +528,25 @@ public class Rti1516eAmbassador implements RTIambassador
 	public void createFederationExecution( String federationName,
 	                                       URL[] fomModules,
 	                                       URL mimModule,
-	                                       String timeName )
-	    throws CouldNotCreateLogicalTimeFactory,
-	           InconsistentFDD,
-	           ErrorReadingFDD,
-	           CouldNotOpenFDD,
-	           ErrorReadingMIM,
-	           CouldNotOpenMIM,
-	           DesignatorIsHLAstandardMIM,
-	           FederationExecutionAlreadyExists,
-	           NotConnected,
-	           RTIinternalError
+	                                       String timeName ) throws CouldNotCreateLogicalTimeFactory,
+	                                                         InconsistentFDD,
+	                                                         ErrorReadingFDD,
+	                                                         CouldNotOpenFDD,
+	                                                         ErrorReadingMIM,
+	                                                         CouldNotOpenMIM,
+	                                                         DesignatorIsHLAstandardMIM,
+	                                                         FederationExecutionAlreadyExists,
+	                                                         NotConnected,
+	                                                         RTIinternalError
 	{
 		// validate the time type, ensuring it is one of the standard ones
 		if( timeName != null )
 		{
 			timeName = timeName.trim();
-			if( timeName.equals("HLAfloat64Time") == false &&
-				timeName.equals("HLAinteger64Time") == false )
+			if( timeName.equals( "HLAfloat64Time" ) == false &&
+			    timeName.equals( "HLAinteger64Time" ) == false )
 			{
-				throw new CouldNotCreateLogicalTimeFactory( "Invalid time implementation: Must be "+
+				throw new CouldNotCreateLogicalTimeFactory( "Invalid time implementation: Must be " +
 				                                            "\"HLAfloat64Time\" or \"HLAinteger64Time\"" );
 			}
 		}
@@ -535,11 +556,10 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 4.6
-	public void destroyFederationExecution( String executionName )
-		throws FederatesCurrentlyJoined,
-		       FederationExecutionDoesNotExist,
-		       NotConnected,
-		       RTIinternalError
+	public void destroyFederationExecution( String executionName ) throws FederatesCurrentlyJoined,
+	                                                               FederationExecutionDoesNotExist,
+	                                                               NotConnected,
+	                                                               RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -560,7 +580,7 @@ public class Rti1516eAmbassador implements RTIambassador
 		{
 			// an exception was caused :(
 			Throwable theException = ((ErrorResponse)response).getCause();
-			
+
 			if( theException instanceof JRTIinternalError )
 			{
 				throw new RTIinternalError( theException.getMessage(), theException );
@@ -571,7 +591,8 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JFederationExecutionDoesNotExist )
 			{
-				throw new FederationExecutionDoesNotExist( theException.getMessage(), theException );
+				throw new FederationExecutionDoesNotExist( theException.getMessage(),
+				                                           theException );
 			}
 			else
 			{
@@ -581,21 +602,22 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 4.7
-	public void listFederationExecutions() throws NotConnected, RTIinternalError
+	public void listFederationExecutions() throws NotConnected,
+	                                       RTIinternalError
 	{
 		featureNotSupported( "listFederationExecutions()" );
 	}
 
 	// 4.9
-	public FederateHandle joinFederationExecution( String federateType, String federationName )
-	    throws CouldNotCreateLogicalTimeFactory,
-	           FederationExecutionDoesNotExist,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateAlreadyExecutionMember,
-	           NotConnected,
-	           CallNotAllowedFromWithinCallback,
-	           RTIinternalError
+	public FederateHandle joinFederationExecution( String federateType,
+	                                               String federationName ) throws CouldNotCreateLogicalTimeFactory,
+	                                                                       FederationExecutionDoesNotExist,
+	                                                                       SaveInProgress,
+	                                                                       RestoreInProgress,
+	                                                                       FederateAlreadyExecutionMember,
+	                                                                       NotConnected,
+	                                                                       CallNotAllowedFromWithinCallback,
+	                                                                       RTIinternalError
 	{
 		// this method just passes off the request to the (String,String,String) overload
 		// using the federate name as the federate type
@@ -612,16 +634,15 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 4.9
 	public FederateHandle joinFederationExecution( String federateName,
 	                                               String federateType,
-	                                               String federationName )
-	    throws CouldNotCreateLogicalTimeFactory,
-	           FederateNameAlreadyInUse,
-	           FederationExecutionDoesNotExist,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateAlreadyExecutionMember,
-	           NotConnected,
-	           CallNotAllowedFromWithinCallback,
-	           RTIinternalError
+	                                               String federationName ) throws CouldNotCreateLogicalTimeFactory,
+	                                                                       FederateNameAlreadyInUse,
+	                                                                       FederationExecutionDoesNotExist,
+	                                                                       SaveInProgress,
+	                                                                       RestoreInProgress,
+	                                                                       FederateAlreadyExecutionMember,
+	                                                                       NotConnected,
+	                                                                       CallNotAllowedFromWithinCallback,
+	                                                                       RTIinternalError
 	{
 		try
 		{
@@ -650,24 +671,21 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 4.9
 	public FederateHandle joinFederationExecution( String federateType,
 	                                               String federationName,
-	                                               URL[] fomModules )
-	    throws CouldNotCreateLogicalTimeFactory,
-	           FederationExecutionDoesNotExist,
-	           InconsistentFDD,
-	           ErrorReadingFDD,
-	           CouldNotOpenFDD,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateAlreadyExecutionMember,
-	           NotConnected,
-	           CallNotAllowedFromWithinCallback,
-	           RTIinternalError
+	                                               URL[] fomModules ) throws CouldNotCreateLogicalTimeFactory,
+	                                                                  FederationExecutionDoesNotExist,
+	                                                                  InconsistentFDD,
+	                                                                  ErrorReadingFDD,
+	                                                                  CouldNotOpenFDD,
+	                                                                  SaveInProgress,
+	                                                                  RestoreInProgress,
+	                                                                  FederateAlreadyExecutionMember,
+	                                                                  NotConnected,
+	                                                                  CallNotAllowedFromWithinCallback,
+	                                                                  RTIinternalError
 	{
 		try
 		{
-			return joinFederationExecution( federateType,
-			                                federateType,
-			                                federationName,
+			return joinFederationExecution( federateType, federateType, federationName,
 			                                fomModules );
 		}
 		catch( FederateNameAlreadyInUse fniu )
@@ -682,24 +700,23 @@ public class Rti1516eAmbassador implements RTIambassador
 	public FederateHandle joinFederationExecution( String federateName,
 	                                               String federateType,
 	                                               String federationName,
-	                                               URL[] fomModules )
-	    throws CouldNotCreateLogicalTimeFactory,
-	           FederateNameAlreadyInUse,
-	           FederationExecutionDoesNotExist,
-	           InconsistentFDD,
-	           ErrorReadingFDD,
-	           CouldNotOpenFDD,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateAlreadyExecutionMember,
-	           NotConnected,
-	           CallNotAllowedFromWithinCallback,
-	           RTIinternalError
+	                                               URL[] fomModules ) throws CouldNotCreateLogicalTimeFactory,
+	                                                                  FederateNameAlreadyInUse,
+	                                                                  FederationExecutionDoesNotExist,
+	                                                                  InconsistentFDD,
+	                                                                  ErrorReadingFDD,
+	                                                                  CouldNotOpenFDD,
+	                                                                  SaveInProgress,
+	                                                                  RestoreInProgress,
+	                                                                  FederateAlreadyExecutionMember,
+	                                                                  NotConnected,
+	                                                                  CallNotAllowedFromWithinCallback,
+	                                                                  RTIinternalError
 	{
 		// 0. check the federate ambassador //
 		// If we don't have a federate ambassador, we haven't connected yet
 		helper.checkConnected();
-		
+
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
@@ -714,7 +731,7 @@ public class Rti1516eAmbassador implements RTIambassador
 		{
 			// everything went fine!
 			ExtendedSuccessMessage success = (ExtendedSuccessMessage)response;
-			
+
 			// return the "handle"
 			return new HLA1516eHandle( (Integer)success.getResult() );
 		}
@@ -733,7 +750,8 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JFederationExecutionDoesNotExist )
 			{
-				throw new FederationExecutionDoesNotExist( theException.getMessage(), theException );
+				throw new FederationExecutionDoesNotExist( theException.getMessage(),
+				                                           theException );
 			}
 			else if( theException instanceof JSaveInProgress )
 			{
@@ -752,14 +770,13 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 4.10
-	public void resignFederationExecution( ResignAction resignAction )
-		throws InvalidResignAction,
-		       OwnershipAcquisitionPending,
-		       FederateOwnsAttributes,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       CallNotAllowedFromWithinCallback,
-		       RTIinternalError
+	public void resignFederationExecution( ResignAction resignAction ) throws InvalidResignAction,
+	                                                                   OwnershipAcquisitionPending,
+	                                                                   FederateOwnsAttributes,
+	                                                                   FederateNotExecutionMember,
+	                                                                   NotConnected,
+	                                                                   CallNotAllowedFromWithinCallback,
+	                                                                   RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -769,7 +786,7 @@ public class Rti1516eAmbassador implements RTIambassador
 			throw new RTIinternalError( "Null resign action" );
 
 		ResignFederation request =
-			new ResignFederation( HLA1516eResignAction.fromResignAction(resignAction) );
+		    new ResignFederation( HLA1516eResignAction.fromResignAction( resignAction ) );
 
 		ResponseMessage response = processMessage( request );
 
@@ -813,12 +830,12 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 4.11
-	public void registerFederationSynchronizationPoint( String label, byte[] userSuppliedTag )
-	    throws SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void registerFederationSynchronizationPoint( String label,
+	                                                    byte[] userSuppliedTag ) throws SaveInProgress,
+	                                                                             RestoreInProgress,
+	                                                                             FederateNotExecutionMember,
+	                                                                             NotConnected,
+	                                                                             RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -866,13 +883,12 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 4.11
 	public void registerFederationSynchronizationPoint( String label,
 	                                                    byte[] tag,
-	                                                    FederateHandleSet synchronizationSet )
-	    throws InvalidFederateHandle,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                    FederateHandleSet synchronizationSet ) throws InvalidFederateHandle,
+	                                                                                           SaveInProgress,
+	                                                                                           RestoreInProgress,
+	                                                                                           FederateNotExecutionMember,
+	                                                                                           NotConnected,
+	                                                                                           RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -922,13 +938,12 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 4.14
-	public void synchronizationPointAchieved( String synchronizationPointLabel )
-	    throws SynchronizationPointLabelNotAnnounced,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void synchronizationPointAchieved( String synchronizationPointLabel ) throws SynchronizationPointLabelNotAnnounced,
+	                                                                             SaveInProgress,
+	                                                                             RestoreInProgress,
+	                                                                             FederateNotExecutionMember,
+	                                                                             NotConnected,
+	                                                                             RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -960,7 +975,8 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JSynchronizationLabelNotAnnounced )
 			{
-				throw new SynchronizationPointLabelNotAnnounced( theException.getMessage(), theException );
+				throw new SynchronizationPointLabelNotAnnounced( theException.getMessage(),
+				                                                 theException );
 			}
 			else if( theException instanceof JSaveInProgress )
 			{
@@ -979,13 +995,12 @@ public class Rti1516eAmbassador implements RTIambassador
 
 	// 4.14
 	public void synchronizationPointAchieved( String synchronizationPointLabel,
-	                                          boolean successIndicator )
-	    throws SynchronizationPointLabelNotAnnounced,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                          boolean successIndicator ) throws SynchronizationPointLabelNotAnnounced,
+	                                                                     SaveInProgress,
+	                                                                     RestoreInProgress,
+	                                                                     FederateNotExecutionMember,
+	                                                                     NotConnected,
+	                                                                     RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -1017,7 +1032,8 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JSynchronizationLabelNotAnnounced )
 			{
-				throw new SynchronizationPointLabelNotAnnounced( theException.getMessage(), theException );
+				throw new SynchronizationPointLabelNotAnnounced( theException.getMessage(),
+				                                                 theException );
 			}
 			else if( theException instanceof JSaveInProgress )
 			{
@@ -1035,132 +1051,121 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 4.16
-	public void requestFederationSave( String label )
-		throws SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void requestFederationSave( String label ) throws SaveInProgress,
+	                                                  RestoreInProgress,
+	                                                  FederateNotExecutionMember,
+	                                                  NotConnected,
+	                                                  RTIinternalError
 	{
 		featureNotSupported( "requestFederationSave()" );
 	}
 
 	// 4.16
-	public void requestFederationSave( String label, LogicalTime theTime )
-		throws LogicalTimeAlreadyPassed,
-		       InvalidLogicalTime,
-		       FederateUnableToUseTime,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void requestFederationSave( String label,
+	                                   LogicalTime theTime ) throws LogicalTimeAlreadyPassed,
+	                                                         InvalidLogicalTime,
+	                                                         FederateUnableToUseTime,
+	                                                         SaveInProgress,
+	                                                         RestoreInProgress,
+	                                                         FederateNotExecutionMember,
+	                                                         NotConnected,
+	                                                         RTIinternalError
 	{
 		featureNotSupported( "requestFederationSave()" );
 	}
 
 	// 4.18
-	public void federateSaveBegun()
-		throws SaveNotInitiated,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void federateSaveBegun() throws SaveNotInitiated,
+	                                RestoreInProgress,
+	                                FederateNotExecutionMember,
+	                                NotConnected,
+	                                RTIinternalError
 	{
 		featureNotSupported( "federateSaveBegun()" );
 	}
 
 	// 4.19
-	public void federateSaveComplete()
-		throws FederateHasNotBegunSave,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void federateSaveComplete() throws FederateHasNotBegunSave,
+	                                   RestoreInProgress,
+	                                   FederateNotExecutionMember,
+	                                   NotConnected,
+	                                   RTIinternalError
 	{
 		featureNotSupported( "federateSaveComplete()" );
 	}
 
 	// 4.19
-	public void federateSaveNotComplete()
-		throws FederateHasNotBegunSave,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void federateSaveNotComplete() throws FederateHasNotBegunSave,
+	                                      RestoreInProgress,
+	                                      FederateNotExecutionMember,
+	                                      NotConnected,
+	                                      RTIinternalError
 	{
 		featureNotSupported( "federateSaveNotComplete()" );
 	}
 
 	// 4.21
-	public void abortFederationSave()
-		throws SaveNotInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void abortFederationSave() throws SaveNotInProgress,
+	                                  FederateNotExecutionMember,
+	                                  NotConnected,
+	                                  RTIinternalError
 	{
 		featureNotSupported( "abortFederationSave()" );
 	}
 
 	// 4.22
-	public void queryFederationSaveStatus()
-		throws RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void queryFederationSaveStatus() throws RestoreInProgress,
+	                                        FederateNotExecutionMember,
+	                                        NotConnected,
+	                                        RTIinternalError
 	{
 		featureNotSupported( "queryFederationSaveStatus()" );
 	}
 
 	// 4.24
-	public void requestFederationRestore( String label )
-		throws SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void requestFederationRestore( String label ) throws SaveInProgress,
+	                                                     RestoreInProgress,
+	                                                     FederateNotExecutionMember,
+	                                                     NotConnected,
+	                                                     RTIinternalError
 	{
 		featureNotSupported( "requestFederationRestore()" );
 	}
 
 	// 4.28
-	public void federateRestoreComplete()
-		throws RestoreNotRequested,
-		       SaveInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void federateRestoreComplete() throws RestoreNotRequested,
+	                                      SaveInProgress,
+	                                      FederateNotExecutionMember,
+	                                      NotConnected,
+	                                      RTIinternalError
 	{
 		featureNotSupported( "federateRestoreComplete()" );
 	}
 
 	// 4.28
-	public void federateRestoreNotComplete()
-		throws RestoreNotRequested,
-		       SaveInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void federateRestoreNotComplete() throws RestoreNotRequested,
+	                                         SaveInProgress,
+	                                         FederateNotExecutionMember,
+	                                         NotConnected,
+	                                         RTIinternalError
 	{
 		featureNotSupported( "federateRestoreNotComplete()" );
 	}
 
 	// 4.30
-	public void abortFederationRestore()
-		throws RestoreNotInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void abortFederationRestore() throws RestoreNotInProgress,
+	                                     FederateNotExecutionMember,
+	                                     NotConnected,
+	                                     RTIinternalError
 	{
 		featureNotSupported( "abortFederationRestore()" );
 	}
 
 	// 4.31
-	public void queryFederationRestoreStatus()
-		throws SaveInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void queryFederationRestoreStatus() throws SaveInProgress,
+	                                           FederateNotExecutionMember,
+	                                           NotConnected,
+	                                           RTIinternalError
 	{
 		featureNotSupported( "queryFederationRestoreStatus()" );
 	}
@@ -1171,14 +1176,13 @@ public class Rti1516eAmbassador implements RTIambassador
 
 	// 5.2
 	public void publishObjectClassAttributes( ObjectClassHandle theClass,
-	                                          AttributeHandleSet attributeList )
-	    throws AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                          AttributeHandleSet attributeList ) throws AttributeNotDefined,
+	                                                                             ObjectClassNotDefined,
+	                                                                             SaveInProgress,
+	                                                                             RestoreInProgress,
+	                                                                             FederateNotExecutionMember,
+	                                                                             NotConnected,
+	                                                                             RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -1235,19 +1239,19 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 5.3
-	public void unpublishObjectClass( ObjectClassHandle theClass )
-		throws OwnershipAcquisitionPending,
-		       ObjectClassNotDefined,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void unpublishObjectClass( ObjectClassHandle theClass ) throws OwnershipAcquisitionPending,
+	                                                               ObjectClassNotDefined,
+	                                                               SaveInProgress,
+	                                                               RestoreInProgress,
+	                                                               FederateNotExecutionMember,
+	                                                               NotConnected,
+	                                                               RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
-		UnpublishObjectClass request = new UnpublishObjectClass(HLA1516eHandle.fromHandle(theClass));
+		UnpublishObjectClass request =
+		    new UnpublishObjectClass( HLA1516eHandle.fromHandle( theClass ) );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -1301,15 +1305,14 @@ public class Rti1516eAmbassador implements RTIambassador
 
 	// 5.3
 	public void unpublishObjectClassAttributes( ObjectClassHandle theClass,
-	                                            AttributeHandleSet attributeList )
-	    throws OwnershipAcquisitionPending,
-	           AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                            AttributeHandleSet attributeList ) throws OwnershipAcquisitionPending,
+	                                                                               AttributeNotDefined,
+	                                                                               ObjectClassNotDefined,
+	                                                                               SaveInProgress,
+	                                                                               RestoreInProgress,
+	                                                                               FederateNotExecutionMember,
+	                                                                               NotConnected,
+	                                                                               RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -1373,19 +1376,18 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 5.4
-	public void publishInteractionClass( InteractionClassHandle theInteraction )
-	    throws InteractionClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void publishInteractionClass( InteractionClassHandle theInteraction ) throws InteractionClassNotDefined,
+	                                                                             SaveInProgress,
+	                                                                             RestoreInProgress,
+	                                                                             FederateNotExecutionMember,
+	                                                                             NotConnected,
+	                                                                             RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
 		PublishInteractionClass request =
-			new PublishInteractionClass( HLA1516eHandle.fromHandle(theInteraction) );
+		    new PublishInteractionClass( HLA1516eHandle.fromHandle( theInteraction ) );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -1430,19 +1432,18 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 5.5
-	public void unpublishInteractionClass( InteractionClassHandle theInteraction )
-	    throws InteractionClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void unpublishInteractionClass( InteractionClassHandle theInteraction ) throws InteractionClassNotDefined,
+	                                                                               SaveInProgress,
+	                                                                               RestoreInProgress,
+	                                                                               FederateNotExecutionMember,
+	                                                                               NotConnected,
+	                                                                               RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
 		UnpublishInteractionClass request =
-			new UnpublishInteractionClass( HLA1516eHandle.fromHandle(theInteraction) );
+		    new UnpublishInteractionClass( HLA1516eHandle.fromHandle( theInteraction ) );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -1492,14 +1493,13 @@ public class Rti1516eAmbassador implements RTIambassador
 
 	// 5.6
 	public void subscribeObjectClassAttributes( ObjectClassHandle theClass,
-	                                            AttributeHandleSet attributeList )
-	    throws AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                            AttributeHandleSet attributeList ) throws AttributeNotDefined,
+	                                                                               ObjectClassNotDefined,
+	                                                                               SaveInProgress,
+	                                                                               RestoreInProgress,
+	                                                                               FederateNotExecutionMember,
+	                                                                               NotConnected,
+	                                                                               RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -1561,29 +1561,27 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 5.6
 	public void subscribeObjectClassAttributes( ObjectClassHandle theClass,
 	                                            AttributeHandleSet attributeList,
-	                                            String updateRateDesignator )
-	    throws AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           InvalidUpdateRateDesignator,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                            String updateRateDesignator ) throws AttributeNotDefined,
+	                                                                          ObjectClassNotDefined,
+	                                                                          InvalidUpdateRateDesignator,
+	                                                                          SaveInProgress,
+	                                                                          RestoreInProgress,
+	                                                                          FederateNotExecutionMember,
+	                                                                          NotConnected,
+	                                                                          RTIinternalError
 	{
 		featureNotSupported( "subscribeObjectClassAttributes(updateRateDesignator)" );
 	}
 
 	// 5.6
 	public void subscribeObjectClassAttributesPassively( ObjectClassHandle theClass,
-	                                                     AttributeHandleSet attributeList )
-	    throws AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                     AttributeHandleSet attributeList ) throws AttributeNotDefined,
+	                                                                                        ObjectClassNotDefined,
+	                                                                                        SaveInProgress,
+	                                                                                        RestoreInProgress,
+	                                                                                        FederateNotExecutionMember,
+	                                                                                        NotConnected,
+	                                                                                        RTIinternalError
 	{
 		featureNotSupported( "subscribeObjectClassAttributesPassively()" );
 	}
@@ -1591,33 +1589,31 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 5.6
 	public void subscribeObjectClassAttributesPassively( ObjectClassHandle theClass,
 	                                                     AttributeHandleSet attributeList,
-	                                                     String updateRateDesignator )
-	    throws AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           InvalidUpdateRateDesignator,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                     String updateRateDesignator ) throws AttributeNotDefined,
+	                                                                                   ObjectClassNotDefined,
+	                                                                                   InvalidUpdateRateDesignator,
+	                                                                                   SaveInProgress,
+	                                                                                   RestoreInProgress,
+	                                                                                   FederateNotExecutionMember,
+	                                                                                   NotConnected,
+	                                                                                   RTIinternalError
 	{
 		featureNotSupported( "subscribeObjectClassAttributesPassively()" );
 	}
 
 	// 5.7
-	public void unsubscribeObjectClass( ObjectClassHandle theClass )
-		throws ObjectClassNotDefined,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void unsubscribeObjectClass( ObjectClassHandle theClass ) throws ObjectClassNotDefined,
+	                                                                 SaveInProgress,
+	                                                                 RestoreInProgress,
+	                                                                 FederateNotExecutionMember,
+	                                                                 NotConnected,
+	                                                                 RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
 		UnsubscribeObjectClass request =
-			new UnsubscribeObjectClass( HLA1516eHandle.fromHandle(theClass) );
+		    new UnsubscribeObjectClass( HLA1516eHandle.fromHandle( theClass ) );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -1667,14 +1663,13 @@ public class Rti1516eAmbassador implements RTIambassador
 
 	// 5.7
 	public void unsubscribeObjectClassAttributes( ObjectClassHandle theClass,
-	                                              AttributeHandleSet attributeList )
-	    throws AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                              AttributeHandleSet attributeList ) throws AttributeNotDefined,
+	                                                                                 ObjectClassNotDefined,
+	                                                                                 SaveInProgress,
+	                                                                                 RestoreInProgress,
+	                                                                                 FederateNotExecutionMember,
+	                                                                                 NotConnected,
+	                                                                                 RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -1734,20 +1729,19 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 5.8
-	public void subscribeInteractionClass( InteractionClassHandle theClass )
-	    throws FederateServiceInvocationsAreBeingReportedViaMOM,
-	           InteractionClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void subscribeInteractionClass( InteractionClassHandle theClass ) throws FederateServiceInvocationsAreBeingReportedViaMOM,
+	                                                                         InteractionClassNotDefined,
+	                                                                         SaveInProgress,
+	                                                                         RestoreInProgress,
+	                                                                         FederateNotExecutionMember,
+	                                                                         NotConnected,
+	                                                                         RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
 		SubscribeInteractionClass request =
-			new SubscribeInteractionClass( HLA1516eHandle.fromHandle(theClass) );
+		    new SubscribeInteractionClass( HLA1516eHandle.fromHandle( theClass ) );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -1796,32 +1790,30 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 5.8
-	public void subscribeInteractionClassPassively( InteractionClassHandle theClass )
-	    throws FederateServiceInvocationsAreBeingReportedViaMOM,
-	    InteractionClassNotDefined,
-	    SaveInProgress,
-	    RestoreInProgress,
-	    FederateNotExecutionMember,
-	    NotConnected,
-	    RTIinternalError
+	public void subscribeInteractionClassPassively( InteractionClassHandle theClass ) throws FederateServiceInvocationsAreBeingReportedViaMOM,
+	                                                                                  InteractionClassNotDefined,
+	                                                                                  SaveInProgress,
+	                                                                                  RestoreInProgress,
+	                                                                                  FederateNotExecutionMember,
+	                                                                                  NotConnected,
+	                                                                                  RTIinternalError
 	{
 		featureNotSupported( "subscribeInteractionClassPassively()" );
 	}
 
 	// 5.9
-	public void unsubscribeInteractionClass( InteractionClassHandle theClass )
-	    throws InteractionClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void unsubscribeInteractionClass( InteractionClassHandle theClass ) throws InteractionClassNotDefined,
+	                                                                           SaveInProgress,
+	                                                                           RestoreInProgress,
+	                                                                           FederateNotExecutionMember,
+	                                                                           NotConnected,
+	                                                                           RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
 		UnsubscribeInteractionClass request =
-			new UnsubscribeInteractionClass( HLA1516eHandle.fromHandle(theClass) );
+		    new UnsubscribeInteractionClass( HLA1516eHandle.fromHandle( theClass ) );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -1870,16 +1862,15 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////// Object Management Services ////////////////////////////////
+	/////////////////////////////// Object Management Services ////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// 6.2
-	public void reserveObjectInstanceName( String theObjectName )
-		throws IllegalName,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void reserveObjectInstanceName( String theObjectName ) throws IllegalName,
+	                                                              SaveInProgress,
+	                                                              RestoreInProgress,
+	                                                              FederateNotExecutionMember,
+	                                                              NotConnected,
+	                                                              RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -1929,56 +1920,52 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 6.4
-	public void releaseObjectInstanceName( String theObjectInstanceName )
-	    throws ObjectInstanceNameNotReserved,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void releaseObjectInstanceName( String theObjectInstanceName ) throws ObjectInstanceNameNotReserved,
+	                                                                      SaveInProgress,
+	                                                                      RestoreInProgress,
+	                                                                      FederateNotExecutionMember,
+	                                                                      NotConnected,
+	                                                                      RTIinternalError
 	{
 		featureNotSupported( "releaseObjectInstanceName()" );
 	}
 
 	// 6.5
-	public void reserveMultipleObjectInstanceName( Set<String> theObjectNames )
-		throws IllegalName,
-		       NameSetWasEmpty,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void reserveMultipleObjectInstanceName( Set<String> theObjectNames ) throws IllegalName,
+	                                                                            NameSetWasEmpty,
+	                                                                            SaveInProgress,
+	                                                                            RestoreInProgress,
+	                                                                            FederateNotExecutionMember,
+	                                                                            NotConnected,
+	                                                                            RTIinternalError
 	{
 		featureNotSupported( "reserveMultipleObjectInstanceName()" );
 	}
 
 	// 6.7
-	public void releaseMultipleObjectInstanceName( Set<String> theObjectNames )
-	    throws ObjectInstanceNameNotReserved,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void releaseMultipleObjectInstanceName( Set<String> theObjectNames ) throws ObjectInstanceNameNotReserved,
+	                                                                            SaveInProgress,
+	                                                                            RestoreInProgress,
+	                                                                            FederateNotExecutionMember,
+	                                                                            NotConnected,
+	                                                                            RTIinternalError
 	{
 		featureNotSupported( "releaseMultipleObjectInstanceName()" );
 	}
 
 	// 6.8
-	public ObjectInstanceHandle registerObjectInstance( ObjectClassHandle theClass )
-	    throws ObjectClassNotPublished,
-	           ObjectClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public ObjectInstanceHandle registerObjectInstance( ObjectClassHandle theClass ) throws ObjectClassNotPublished,
+	                                                                                 ObjectClassNotDefined,
+	                                                                                 SaveInProgress,
+	                                                                                 RestoreInProgress,
+	                                                                                 FederateNotExecutionMember,
+	                                                                                 NotConnected,
+	                                                                                 RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
-		RegisterObject request = new RegisterObject( HLA1516eHandle.fromHandle(theClass) );
+		RegisterObject request = new RegisterObject( HLA1516eHandle.fromHandle( theClass ) );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -2031,22 +2018,21 @@ public class Rti1516eAmbassador implements RTIambassador
 
 	// 6.8
 	public ObjectInstanceHandle registerObjectInstance( ObjectClassHandle theClass,
-	                                                    String theObjectName )
-	    throws ObjectInstanceNameInUse,
-	           ObjectInstanceNameNotReserved,
-	           ObjectClassNotPublished,
-	           ObjectClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                    String theObjectName ) throws ObjectInstanceNameInUse,
+	                                                                           ObjectInstanceNameNotReserved,
+	                                                                           ObjectClassNotPublished,
+	                                                                           ObjectClassNotDefined,
+	                                                                           SaveInProgress,
+	                                                                           RestoreInProgress,
+	                                                                           FederateNotExecutionMember,
+	                                                                           NotConnected,
+	                                                                           RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
 		RegisterObject request =
-			new RegisterObject( HLA1516eHandle.fromHandle(theClass), theObjectName );
+		    new RegisterObject( HLA1516eHandle.fromHandle( theClass ), theObjectName );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -2104,15 +2090,14 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 6.10
 	public void updateAttributeValues( ObjectInstanceHandle theObject,
 	                                   AttributeHandleValueMap theAttributes,
-	                                   byte[] tag )
-	    throws AttributeNotOwned,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                   byte[] tag ) throws AttributeNotOwned,
+	                                                AttributeNotDefined,
+	                                                ObjectInstanceNotKnown,
+	                                                SaveInProgress,
+	                                                RestoreInProgress,
+	                                                FederateNotExecutionMember,
+	                                                NotConnected,
+	                                                RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -2175,16 +2160,15 @@ public class Rti1516eAmbassador implements RTIambassador
 	public MessageRetractionReturn updateAttributeValues( ObjectInstanceHandle theObject,
 	                                                      AttributeHandleValueMap theAttributes,
 	                                                      byte[] tag,
-	                                                      LogicalTime theTime )
-	    throws InvalidLogicalTime,
-	           AttributeNotOwned,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                      LogicalTime theTime ) throws InvalidLogicalTime,
+	                                                                            AttributeNotOwned,
+	                                                                            AttributeNotDefined,
+	                                                                            ObjectInstanceNotKnown,
+	                                                                            SaveInProgress,
+	                                                                            RestoreInProgress,
+	                                                                            FederateNotExecutionMember,
+	                                                                            NotConnected,
+	                                                                            RTIinternalError
 	{
 		////////////////////////////////////////////////////////
 		// 0. check that we have the right logical time class //
@@ -2195,7 +2179,7 @@ public class Rti1516eAmbassador implements RTIambassador
 
 		HashMap<Integer,byte[]> map = HLA1516eAttributeHandleValueMap.toJavaMap( theAttributes );
 		int oHandle = HLA1516eHandle.fromHandle( theObject );
-		
+
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
@@ -2209,7 +2193,7 @@ public class Rti1516eAmbassador implements RTIambassador
 		if( response.isError() == false )
 		{
 			// everything went fine!
-			return new MessageRetractionReturn( true, new HLA1516eHandle(0) );
+			return new MessageRetractionReturn( true, new HLA1516eHandle( 0 ) );
 		}
 		else
 		{
@@ -2259,20 +2243,19 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 6.12
 	public void sendInteraction( InteractionClassHandle theInteraction,
 	                             ParameterHandleValueMap theParameters,
-	                             byte[] tag )
-	    throws InteractionClassNotPublished,
-	           InteractionParameterNotDefined,
-	           InteractionClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                             byte[] tag ) throws InteractionClassNotPublished,
+	                                          InteractionParameterNotDefined,
+	                                          InteractionClassNotDefined,
+	                                          SaveInProgress,
+	                                          RestoreInProgress,
+	                                          FederateNotExecutionMember,
+	                                          NotConnected,
+	                                          RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
-		HashMap<Integer,byte[]> map = HLA1516eParameterHandleValueMap.toJavaMap( theParameters ); 
+		HashMap<Integer,byte[]> map = HLA1516eParameterHandleValueMap.toJavaMap( theParameters );
 		int interactionId = HLA1516eHandle.fromHandle( theInteraction );
 		SendInteraction request = new SendInteraction( interactionId, tag, map );
 		ResponseMessage response = processMessage( request );
@@ -2330,16 +2313,15 @@ public class Rti1516eAmbassador implements RTIambassador
 	public MessageRetractionReturn sendInteraction( InteractionClassHandle theInteraction,
 	                                                ParameterHandleValueMap theParameters,
 	                                                byte[] tag,
-	                                                LogicalTime theTime )
-	    throws InvalidLogicalTime,
-	           InteractionClassNotPublished,
-	           InteractionParameterNotDefined,
-	           InteractionClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                LogicalTime theTime ) throws InvalidLogicalTime,
+	                                                                      InteractionClassNotPublished,
+	                                                                      InteractionParameterNotDefined,
+	                                                                      InteractionClassNotDefined,
+	                                                                      SaveInProgress,
+	                                                                      RestoreInProgress,
+	                                                                      FederateNotExecutionMember,
+	                                                                      NotConnected,
+	                                                                      RTIinternalError
 	{
 		////////////////////////////////////////////////////////
 		// 0. check that we have the right logical time class //
@@ -2355,7 +2337,7 @@ public class Rti1516eAmbassador implements RTIambassador
 		///////////////////////////////////////////////////////
 		SendInteraction request = new SendInteraction( iHandle, tag, map, doubleTime );
 		ResponseMessage response = processMessage( request );
-		
+
 		////////////////////////////
 		// 2. process the results //
 		////////////////////////////
@@ -2363,7 +2345,7 @@ public class Rti1516eAmbassador implements RTIambassador
 		if( response.isError() == false )
 		{
 			// everything went fine!
-			return new MessageRetractionReturn( true, new HLA1516eHandle(0) );
+			return new MessageRetractionReturn( true, new HLA1516eHandle( 0 ) );
 		}
 		else
 		{
@@ -2411,20 +2393,20 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 6.14
-	public void deleteObjectInstance( ObjectInstanceHandle objectHandle, byte[] userSuppliedTag )
-	    throws DeletePrivilegeNotHeld,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void deleteObjectInstance( ObjectInstanceHandle objectHandle,
+	                                  byte[] userSuppliedTag ) throws DeletePrivilegeNotHeld,
+	                                                           ObjectInstanceNotKnown,
+	                                                           SaveInProgress,
+	                                                           RestoreInProgress,
+	                                                           FederateNotExecutionMember,
+	                                                           NotConnected,
+	                                                           RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
 		DeleteObject request =
-			new DeleteObject( HLA1516eHandle.fromHandle(objectHandle), userSuppliedTag );
+		    new DeleteObject( HLA1516eHandle.fromHandle( objectHandle ), userSuppliedTag );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -2475,15 +2457,14 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 6.14
 	public MessageRetractionReturn deleteObjectInstance( ObjectInstanceHandle objectHandle,
 	                                                     byte[] userSuppliedTag,
-	                                                     LogicalTime theTime )
-	    throws InvalidLogicalTime,
-	           DeletePrivilegeNotHeld,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                     LogicalTime theTime ) throws InvalidLogicalTime,
+	                                                                           DeletePrivilegeNotHeld,
+	                                                                           ObjectInstanceNotKnown,
+	                                                                           SaveInProgress,
+	                                                                           RestoreInProgress,
+	                                                                           FederateNotExecutionMember,
+	                                                                           NotConnected,
+	                                                                           RTIinternalError
 	{
 		////////////////////////////////////////////////////////
 		// 0. check that we have the right logical time class //
@@ -2492,7 +2473,7 @@ public class Rti1516eAmbassador implements RTIambassador
 		if( theTime != null )
 			time = DoubleTime.fromTime( theTime );
 		int oHandle = HLA1516eHandle.fromHandle( objectHandle );
-		
+
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
@@ -2506,7 +2487,7 @@ public class Rti1516eAmbassador implements RTIambassador
 		if( response.isError() == false )
 		{
 			// everything went fine!
-			return new MessageRetractionReturn( true, new HLA1516eHandle(0) );
+			return new MessageRetractionReturn( true, new HLA1516eHandle( 0 ) );
 		}
 		else
 		{
@@ -2550,20 +2531,19 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 6.16
-	public void localDeleteObjectInstance( ObjectInstanceHandle objectHandle )
-	    throws OwnershipAcquisitionPending,
-	           FederateOwnsAttributes,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void localDeleteObjectInstance( ObjectInstanceHandle objectHandle ) throws OwnershipAcquisitionPending,
+	                                                                           FederateOwnsAttributes,
+	                                                                           ObjectInstanceNotKnown,
+	                                                                           SaveInProgress,
+	                                                                           RestoreInProgress,
+	                                                                           FederateNotExecutionMember,
+	                                                                           NotConnected,
+	                                                                           RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
-		LocalDelete request = new LocalDelete( HLA1516eHandle.fromHandle(objectHandle) );
+		LocalDelete request = new LocalDelete( HLA1516eHandle.fromHandle( objectHandle ) );
 		ResponseMessage response = processMessage( request );
 
 		////////////////////////////
@@ -2617,14 +2597,13 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 6.19
 	public void requestAttributeValueUpdate( ObjectInstanceHandle theObject,
 	                                         AttributeHandleSet theAttributes,
-	                                         byte[] tag )
-	    throws AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                         byte[] tag ) throws AttributeNotDefined,
+	                                                      ObjectInstanceNotKnown,
+	                                                      SaveInProgress,
+	                                                      RestoreInProgress,
+	                                                      FederateNotExecutionMember,
+	                                                      NotConnected,
+	                                                      RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -2686,14 +2665,13 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 6.19
 	public void requestAttributeValueUpdate( ObjectClassHandle theClass,
 	                                         AttributeHandleSet theAttributes,
-	                                         byte[] tag )
-	    throws AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                         byte[] tag ) throws AttributeNotDefined,
+	                                                      ObjectClassNotDefined,
+	                                                      SaveInProgress,
+	                                                      RestoreInProgress,
+	                                                      FederateNotExecutionMember,
+	                                                      NotConnected,
+	                                                      RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -2755,78 +2733,73 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 6.23
 	public void requestAttributeTransportationTypeChange( ObjectInstanceHandle theObject,
 	                                                      AttributeHandleSet theAttributes,
-	                                                      TransportationTypeHandle theType )
-	    throws AttributeAlreadyBeingChanged,
-	           AttributeNotOwned,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           InvalidTransportationType,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                      TransportationTypeHandle theType ) throws AttributeAlreadyBeingChanged,
+	                                                                                         AttributeNotOwned,
+	                                                                                         AttributeNotDefined,
+	                                                                                         ObjectInstanceNotKnown,
+	                                                                                         InvalidTransportationType,
+	                                                                                         SaveInProgress,
+	                                                                                         RestoreInProgress,
+	                                                                                         FederateNotExecutionMember,
+	                                                                                         NotConnected,
+	                                                                                         RTIinternalError
 	{
 		featureNotSupported( "requestAttributeTransportationTypeChange()" );
 	}
 
 	// 6.25
 	public void queryAttributeTransportationType( ObjectInstanceHandle theObject,
-	                                              AttributeHandle theAttribute )
-	    throws AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                              AttributeHandle theAttribute ) throws AttributeNotDefined,
+	                                                                             ObjectInstanceNotKnown,
+	                                                                             SaveInProgress,
+	                                                                             RestoreInProgress,
+	                                                                             FederateNotExecutionMember,
+	                                                                             NotConnected,
+	                                                                             RTIinternalError
 	{
 		featureNotSupported( "queryAttributeTransportationType()" );
 	}
 
 	// 6.27
 	public void requestInteractionTransportationTypeChange( InteractionClassHandle theClass,
-	                                                        TransportationTypeHandle theType )
-	    throws InteractionClassAlreadyBeingChanged,
-	           InteractionClassNotPublished,
-	           InteractionClassNotDefined,
-	           InvalidTransportationType,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                        TransportationTypeHandle theType ) throws InteractionClassAlreadyBeingChanged,
+	                                                                                           InteractionClassNotPublished,
+	                                                                                           InteractionClassNotDefined,
+	                                                                                           InvalidTransportationType,
+	                                                                                           SaveInProgress,
+	                                                                                           RestoreInProgress,
+	                                                                                           FederateNotExecutionMember,
+	                                                                                           NotConnected,
+	                                                                                           RTIinternalError
 	{
 		featureNotSupported( "requestInteractionTransportationTypeChange()" );
 	}
 
 	// 6.29
 	public void queryInteractionTransportationType( FederateHandle theFederate,
-	                                                InteractionClassHandle theInteraction )
-	    throws InteractionClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                InteractionClassHandle theInteraction ) throws InteractionClassNotDefined,
+	                                                                                        SaveInProgress,
+	                                                                                        RestoreInProgress,
+	                                                                                        FederateNotExecutionMember,
+	                                                                                        NotConnected,
+	                                                                                        RTIinternalError
 	{
 		featureNotSupported( "queryInteractionTransportationType()" );
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////// Ownership Management Services //////////////////////////////
+	////////////////////////////// Ownership Management Services //////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// 7.2
 	public void unconditionalAttributeOwnershipDivestiture( ObjectInstanceHandle theObject,
-	                                                        AttributeHandleSet theAttributes )
-	    throws AttributeNotOwned,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                        AttributeHandleSet theAttributes ) throws AttributeNotOwned,
+	                                                                                           AttributeNotDefined,
+	                                                                                           ObjectInstanceNotKnown,
+	                                                                                           SaveInProgress,
+	                                                                                           RestoreInProgress,
+	                                                                                           FederateNotExecutionMember,
+	                                                                                           NotConnected,
+	                                                                                           RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -2893,16 +2866,15 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 7.3
 	public void negotiatedAttributeOwnershipDivestiture( ObjectInstanceHandle theObject,
 	                                                     AttributeHandleSet theAttributes,
-	                                                     byte[] userSuppliedTag )
-	    throws AttributeAlreadyBeingDivested,
-	           AttributeNotOwned,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                     byte[] userSuppliedTag ) throws AttributeAlreadyBeingDivested,
+	                                                                              AttributeNotOwned,
+	                                                                              AttributeNotDefined,
+	                                                                              ObjectInstanceNotKnown,
+	                                                                              SaveInProgress,
+	                                                                              RestoreInProgress,
+	                                                                              FederateNotExecutionMember,
+	                                                                              NotConnected,
+	                                                                              RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -2973,17 +2945,16 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 7.6
 	public void confirmDivestiture( ObjectInstanceHandle theObject,
 	                                AttributeHandleSet theAttributes,
-	                                byte[] userSuppliedTag )
-	    throws NoAcquisitionPending,
-	           AttributeDivestitureWasNotRequested,
-	           AttributeNotOwned,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                byte[] userSuppliedTag ) throws NoAcquisitionPending,
+	                                                         AttributeDivestitureWasNotRequested,
+	                                                         AttributeNotOwned,
+	                                                         AttributeNotDefined,
+	                                                         ObjectInstanceNotKnown,
+	                                                         SaveInProgress,
+	                                                         RestoreInProgress,
+	                                                         FederateNotExecutionMember,
+	                                                         NotConnected,
+	                                                         RTIinternalError
 	{
 		featureNotSupported( "confirmDivestiture()" );
 	}
@@ -2991,17 +2962,16 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 7.8
 	public void attributeOwnershipAcquisition( ObjectInstanceHandle theObject,
 	                                           AttributeHandleSet desiredAttributes,
-	                                           byte[] userSuppliedTag )
-	    throws AttributeNotPublished,
-	           ObjectClassNotPublished,
-	           FederateOwnsAttributes,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                           byte[] userSuppliedTag ) throws AttributeNotPublished,
+	                                                                    ObjectClassNotPublished,
+	                                                                    FederateOwnsAttributes,
+	                                                                    AttributeNotDefined,
+	                                                                    ObjectInstanceNotKnown,
+	                                                                    SaveInProgress,
+	                                                                    RestoreInProgress,
+	                                                                    FederateNotExecutionMember,
+	                                                                    NotConnected,
+	                                                                    RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -3075,18 +3045,17 @@ public class Rti1516eAmbassador implements RTIambassador
 
 	// 7.9
 	public void attributeOwnershipAcquisitionIfAvailable( ObjectInstanceHandle theObject,
-	                                                      AttributeHandleSet desiredAttributes )
-	    throws AttributeAlreadyBeingAcquired,
-	           AttributeNotPublished,
-	           ObjectClassNotPublished,
-	           FederateOwnsAttributes,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                      AttributeHandleSet desiredAttributes ) throws AttributeAlreadyBeingAcquired,
+	                                                                                             AttributeNotPublished,
+	                                                                                             ObjectClassNotPublished,
+	                                                                                             FederateOwnsAttributes,
+	                                                                                             AttributeNotDefined,
+	                                                                                             ObjectInstanceNotKnown,
+	                                                                                             SaveInProgress,
+	                                                                                             RestoreInProgress,
+	                                                                                             FederateNotExecutionMember,
+	                                                                                             NotConnected,
+	                                                                                             RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -3164,15 +3133,14 @@ public class Rti1516eAmbassador implements RTIambassador
 
 	// 7.12
 	public void attributeOwnershipReleaseDenied( ObjectInstanceHandle theObject,
-	                                             AttributeHandleSet theAttributes )
-	    throws AttributeNotOwned,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                             AttributeHandleSet theAttributes ) throws AttributeNotOwned,
+	                                                                                AttributeNotDefined,
+	                                                                                ObjectInstanceNotKnown,
+	                                                                                SaveInProgress,
+	                                                                                RestoreInProgress,
+	                                                                                FederateNotExecutionMember,
+	                                                                                NotConnected,
+	                                                                                RTIinternalError
 	{
 		featureNotSupported( "attributeOwnershipReleaseDenied()" );
 	}
@@ -3180,15 +3148,14 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 7.13
 	@SuppressWarnings("unchecked")
 	public AttributeHandleSet attributeOwnershipDivestitureIfWanted( ObjectInstanceHandle theObject,
-	                                                                 AttributeHandleSet theAttributes )
-	    throws AttributeNotOwned,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                                 AttributeHandleSet theAttributes ) throws AttributeNotOwned,
+	                                                                                                    AttributeNotDefined,
+	                                                                                                    ObjectInstanceNotKnown,
+	                                                                                                    SaveInProgress,
+	                                                                                                    RestoreInProgress,
+	                                                                                                    FederateNotExecutionMember,
+	                                                                                                    NotConnected,
+	                                                                                                    RTIinternalError
 	{
 		// TODO NOTE This is just used the same as a release response in 1.3 at the moment.
 		//           However, in 1516/e this doesn't have to be used in response to a release
@@ -3253,23 +3220,22 @@ public class Rti1516eAmbassador implements RTIambassador
 				logException( "attributeOwnershipDivestitureIfWanted", theException );
 			}
 		}
-		
+
 		featureNotSupported( "attributeOwnershipDivestitureIfWanted()" );
 		return null; // keep the compiler happy
 	}
 
 	// 7.14
 	public void cancelNegotiatedAttributeOwnershipDivestiture( ObjectInstanceHandle theObject,
-	                                                           AttributeHandleSet theAttributes )
-	    throws AttributeDivestitureWasNotRequested,
-	           AttributeNotOwned,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                           AttributeHandleSet theAttributes ) throws AttributeDivestitureWasNotRequested,
+	                                                                                              AttributeNotOwned,
+	                                                                                              AttributeNotDefined,
+	                                                                                              ObjectInstanceNotKnown,
+	                                                                                              SaveInProgress,
+	                                                                                              RestoreInProgress,
+	                                                                                              FederateNotExecutionMember,
+	                                                                                              NotConnected,
+	                                                                                              RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -3312,7 +3278,8 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JAttributeDivestitureWasNotRequested )
 			{
-				throw new AttributeDivestitureWasNotRequested( theException.getMessage(), theException );
+				throw new AttributeDivestitureWasNotRequested( theException.getMessage(),
+				                                               theException );
 			}
 			else if( theException instanceof JFederateNotExecutionMember )
 			{
@@ -3339,16 +3306,15 @@ public class Rti1516eAmbassador implements RTIambassador
 
 	// 7.15
 	public void cancelAttributeOwnershipAcquisition( ObjectInstanceHandle theObject,
-	                                                 AttributeHandleSet theAttributes )
-	    throws AttributeAcquisitionWasNotRequested,
-	           AttributeAlreadyOwned,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                 AttributeHandleSet theAttributes ) throws AttributeAcquisitionWasNotRequested,
+	                                                                                    AttributeAlreadyOwned,
+	                                                                                    AttributeNotDefined,
+	                                                                                    ObjectInstanceNotKnown,
+	                                                                                    SaveInProgress,
+	                                                                                    RestoreInProgress,
+	                                                                                    FederateNotExecutionMember,
+	                                                                                    NotConnected,
+	                                                                                    RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -3391,7 +3357,8 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JAttributeAcquisitionWasNotRequested )
 			{
-				throw new AttributeAcquisitionWasNotRequested( theException.getMessage(), theException );
+				throw new AttributeAcquisitionWasNotRequested( theException.getMessage(),
+				                                               theException );
 			}
 			else if( theException instanceof JFederateNotExecutionMember )
 			{
@@ -3418,14 +3385,13 @@ public class Rti1516eAmbassador implements RTIambassador
 
 	// 7.17
 	public void queryAttributeOwnership( ObjectInstanceHandle theObject,
-	                                     AttributeHandle theAttribute )
-	    throws AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                     AttributeHandle theAttribute ) throws AttributeNotDefined,
+	                                                                    ObjectInstanceNotKnown,
+	                                                                    SaveInProgress,
+	                                                                    RestoreInProgress,
+	                                                                    FederateNotExecutionMember,
+	                                                                    NotConnected,
+	                                                                    RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -3487,18 +3453,17 @@ public class Rti1516eAmbassador implements RTIambassador
 
 	// 7.19
 	public boolean isAttributeOwnedByFederate( ObjectInstanceHandle theObject,
-	                                           AttributeHandle theAttribute )
-	    throws AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                           AttributeHandle theAttribute ) throws AttributeNotDefined,
+	                                                                          ObjectInstanceNotKnown,
+	                                                                          SaveInProgress,
+	                                                                          RestoreInProgress,
+	                                                                          FederateNotExecutionMember,
+	                                                                          NotConnected,
+	                                                                          RTIinternalError
 	{
 		helper.checkJoined();
-		
-		int oHandle = HLA1516eHandle.fromHandle( theObject );		
+
+		int oHandle = HLA1516eHandle.fromHandle( theObject );
 		OCInstance instance = helper.getState().getRepository().getInstance( oHandle );
 		if( instance == null )
 		{
@@ -3521,22 +3486,21 @@ public class Rti1516eAmbassador implements RTIambassador
 	//////////////////////////////// Time Management Services /////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// 8.2
-	public void enableTimeRegulation( LogicalTimeInterval theLookahead )
-		throws InvalidLookahead,
-		       InTimeAdvancingState,
-		       RequestForTimeRegulationPending,
-		       TimeRegulationAlreadyEnabled,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void enableTimeRegulation( LogicalTimeInterval theLookahead ) throws InvalidLookahead,
+	                                                                     InTimeAdvancingState,
+	                                                                     RequestForTimeRegulationPending,
+	                                                                     TimeRegulationAlreadyEnabled,
+	                                                                     SaveInProgress,
+	                                                                     RestoreInProgress,
+	                                                                     FederateNotExecutionMember,
+	                                                                     NotConnected,
+	                                                                     RTIinternalError
 	{
 		////////////////////////////////////////////////////////
 		// 0. check that we have the right logical time class //
 		////////////////////////////////////////////////////////
 		double la = DoubleTimeInterval.fromLookahead( theLookahead );
-		
+
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
@@ -3556,7 +3520,7 @@ public class Rti1516eAmbassador implements RTIambassador
 		{
 			// an exception was caused :(
 			Throwable theException = ((ErrorResponse)response).getCause();
-			
+
 			if( theException instanceof JRTIinternalError )
 			{
 				throw new RTIinternalError( theException.getMessage(), theException );
@@ -3567,7 +3531,8 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JEnableTimeRegulationPending )
 			{
-				throw new RequestForTimeRegulationPending( theException.getMessage(), theException );
+				throw new RequestForTimeRegulationPending( theException.getMessage(),
+				                                           theException );
 			}
 			else if( theException instanceof JTimeAdvanceAlreadyInProgress )
 			{
@@ -3601,13 +3566,12 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 8.4
-	public void disableTimeRegulation()
-		throws TimeRegulationIsNotEnabled,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void disableTimeRegulation() throws TimeRegulationIsNotEnabled,
+	                                    SaveInProgress,
+	                                    RestoreInProgress,
+	                                    FederateNotExecutionMember,
+	                                    NotConnected,
+	                                    RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -3628,7 +3592,7 @@ public class Rti1516eAmbassador implements RTIambassador
 		{
 			// an exception was caused :(
 			Throwable theException = ((ErrorResponse)response).getCause();
-			
+
 			if( theException instanceof JRTIinternalError )
 			{
 				throw new RTIinternalError( theException.getMessage(), theException );
@@ -3657,15 +3621,14 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 8.5
-	public void enableTimeConstrained()
-		throws InTimeAdvancingState,
-		       RequestForTimeConstrainedPending,
-		       TimeConstrainedAlreadyEnabled,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void enableTimeConstrained() throws InTimeAdvancingState,
+	                                    RequestForTimeConstrainedPending,
+	                                    TimeConstrainedAlreadyEnabled,
+	                                    SaveInProgress,
+	                                    RestoreInProgress,
+	                                    FederateNotExecutionMember,
+	                                    NotConnected,
+	                                    RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -3686,7 +3649,7 @@ public class Rti1516eAmbassador implements RTIambassador
 		{
 			// an exception was caused :(
 			Throwable theException = ((ErrorResponse)response).getCause();
-			
+
 			if( theException instanceof JRTIinternalError )
 			{
 				throw new RTIinternalError( theException.getMessage(), theException );
@@ -3697,7 +3660,8 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JEnableTimeConstrainedPending )
 			{
-				throw new RequestForTimeConstrainedPending( theException.getMessage(), theException );
+				throw new RequestForTimeConstrainedPending( theException.getMessage(),
+				                                            theException );
 			}
 			else if( theException instanceof JTimeAdvanceAlreadyInProgress )
 			{
@@ -3723,13 +3687,12 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 8.7
-	public void disableTimeConstrained()
-		throws TimeConstrainedIsNotEnabled,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void disableTimeConstrained() throws TimeConstrainedIsNotEnabled,
+	                                     SaveInProgress,
+	                                     RestoreInProgress,
+	                                     FederateNotExecutionMember,
+	                                     NotConnected,
+	                                     RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -3750,7 +3713,7 @@ public class Rti1516eAmbassador implements RTIambassador
 		{
 			// an exception was caused :(
 			Throwable theException = ((ErrorResponse)response).getCause();
-			
+
 			if( theException instanceof JRTIinternalError )
 			{
 				throw new RTIinternalError( theException.getMessage(), theException );
@@ -3779,23 +3742,22 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 8.8
-	public void timeAdvanceRequest( LogicalTime theTime )
-		throws LogicalTimeAlreadyPassed,
-		       InvalidLogicalTime,
-		       InTimeAdvancingState,
-		       RequestForTimeRegulationPending,
-		       RequestForTimeConstrainedPending,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void timeAdvanceRequest( LogicalTime theTime ) throws LogicalTimeAlreadyPassed,
+	                                                      InvalidLogicalTime,
+	                                                      InTimeAdvancingState,
+	                                                      RequestForTimeRegulationPending,
+	                                                      RequestForTimeConstrainedPending,
+	                                                      SaveInProgress,
+	                                                      RestoreInProgress,
+	                                                      FederateNotExecutionMember,
+	                                                      NotConnected,
+	                                                      RTIinternalError
 	{
 		////////////////////////////////////////////////////////
 		// 0. check that we have the right logical time class //
 		////////////////////////////////////////////////////////
 		double time = DoubleTime.fromTime( theTime ); // also checks for null
-		
+
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
@@ -3835,11 +3797,13 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JEnableTimeRegulationPending )
 			{
-				throw new RequestForTimeRegulationPending( theException.getMessage(), theException );
+				throw new RequestForTimeRegulationPending( theException.getMessage(),
+				                                           theException );
 			}
 			else if( theException instanceof JEnableTimeConstrainedPending )
 			{
-				throw new RequestForTimeConstrainedPending( theException.getMessage(), theException );
+				throw new RequestForTimeConstrainedPending( theException.getMessage(),
+				                                            theException );
 			}
 			else if( theException instanceof JSaveInProgress )
 			{
@@ -3861,24 +3825,23 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 8.9
-	public void timeAdvanceRequestAvailable( LogicalTime theTime )
-		throws LogicalTimeAlreadyPassed,
-		       InvalidLogicalTime,
-		       InTimeAdvancingState,
-		       RequestForTimeRegulationPending,
-		       RequestForTimeConstrainedPending,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void timeAdvanceRequestAvailable( LogicalTime theTime ) throws LogicalTimeAlreadyPassed,
+	                                                               InvalidLogicalTime,
+	                                                               InTimeAdvancingState,
+	                                                               RequestForTimeRegulationPending,
+	                                                               RequestForTimeConstrainedPending,
+	                                                               SaveInProgress,
+	                                                               RestoreInProgress,
+	                                                               FederateNotExecutionMember,
+	                                                               NotConnected,
+	                                                               RTIinternalError
 	{
 		//XXX: NOTE!! This is just the same as a regular time advance request at this point in time
 		////////////////////////////////////////////////////////
 		// 0. check that we have the right logical time class //
 		////////////////////////////////////////////////////////
 		double time = DoubleTime.fromTime( theTime ); // also checks for null
-		
+
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
@@ -3918,11 +3881,13 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JEnableTimeRegulationPending )
 			{
-				throw new RequestForTimeRegulationPending( theException.getMessage(), theException );
+				throw new RequestForTimeRegulationPending( theException.getMessage(),
+				                                           theException );
 			}
 			else if( theException instanceof JEnableTimeConstrainedPending )
 			{
-				throw new RequestForTimeConstrainedPending( theException.getMessage(), theException );
+				throw new RequestForTimeConstrainedPending( theException.getMessage(),
+				                                            theException );
 			}
 			else if( theException instanceof JSaveInProgress )
 			{
@@ -3944,23 +3909,22 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 8.10
-	public void nextMessageRequest( LogicalTime theTime )
-		throws LogicalTimeAlreadyPassed,
-		       InvalidLogicalTime,
-		       InTimeAdvancingState,
-		       RequestForTimeRegulationPending,
-		       RequestForTimeConstrainedPending,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void nextMessageRequest( LogicalTime theTime ) throws LogicalTimeAlreadyPassed,
+	                                                      InvalidLogicalTime,
+	                                                      InTimeAdvancingState,
+	                                                      RequestForTimeRegulationPending,
+	                                                      RequestForTimeConstrainedPending,
+	                                                      SaveInProgress,
+	                                                      RestoreInProgress,
+	                                                      FederateNotExecutionMember,
+	                                                      NotConnected,
+	                                                      RTIinternalError
 	{
 		////////////////////////////////////////////////////////
 		// 0. check that we have the right logical time class //
 		////////////////////////////////////////////////////////
 		double time = DoubleTime.fromTime( theTime );
-		
+
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
@@ -4000,11 +3964,13 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JEnableTimeRegulationPending )
 			{
-				throw new RequestForTimeRegulationPending( theException.getMessage(), theException );
+				throw new RequestForTimeRegulationPending( theException.getMessage(),
+				                                           theException );
 			}
 			else if( theException instanceof JEnableTimeConstrainedPending )
 			{
-				throw new RequestForTimeConstrainedPending( theException.getMessage(), theException );
+				throw new RequestForTimeConstrainedPending( theException.getMessage(),
+				                                            theException );
 			}
 			else if( theException instanceof JSaveInProgress )
 			{
@@ -4026,23 +3992,22 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 8.11
-	public void nextMessageRequestAvailable( LogicalTime theTime )
-		throws LogicalTimeAlreadyPassed,
-		       InvalidLogicalTime,
-		       InTimeAdvancingState,
-		       RequestForTimeRegulationPending,
-		       RequestForTimeConstrainedPending,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void nextMessageRequestAvailable( LogicalTime theTime ) throws LogicalTimeAlreadyPassed,
+	                                                               InvalidLogicalTime,
+	                                                               InTimeAdvancingState,
+	                                                               RequestForTimeRegulationPending,
+	                                                               RequestForTimeConstrainedPending,
+	                                                               SaveInProgress,
+	                                                               RestoreInProgress,
+	                                                               FederateNotExecutionMember,
+	                                                               NotConnected,
+	                                                               RTIinternalError
 	{
 		////////////////////////////////////////////////////////
 		// 0. check that we have the right logical time class //
 		////////////////////////////////////////////////////////
 		double time = DoubleTime.fromTime( theTime );
-		
+
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
@@ -4082,11 +4047,13 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JEnableTimeRegulationPending )
 			{
-				throw new RequestForTimeRegulationPending( theException.getMessage(), theException );
+				throw new RequestForTimeRegulationPending( theException.getMessage(),
+				                                           theException );
 			}
 			else if( theException instanceof JEnableTimeConstrainedPending )
 			{
-				throw new RequestForTimeConstrainedPending( theException.getMessage(), theException );
+				throw new RequestForTimeConstrainedPending( theException.getMessage(),
+				                                            theException );
 			}
 			else if( theException instanceof JSaveInProgress )
 			{
@@ -4108,23 +4075,22 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 8.12
-	public void flushQueueRequest( LogicalTime theTime )
-		throws LogicalTimeAlreadyPassed,
-		       InvalidLogicalTime,
-		       InTimeAdvancingState,
-		       RequestForTimeRegulationPending,
-		       RequestForTimeConstrainedPending,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void flushQueueRequest( LogicalTime theTime ) throws LogicalTimeAlreadyPassed,
+	                                                     InvalidLogicalTime,
+	                                                     InTimeAdvancingState,
+	                                                     RequestForTimeRegulationPending,
+	                                                     RequestForTimeConstrainedPending,
+	                                                     SaveInProgress,
+	                                                     RestoreInProgress,
+	                                                     FederateNotExecutionMember,
+	                                                     NotConnected,
+	                                                     RTIinternalError
 	{
 		////////////////////////////////////////////////////////
 		// 0. check that we have the right logical time class //
 		////////////////////////////////////////////////////////
 		double time = DoubleTime.fromTime( theTime );
-		
+
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
@@ -4164,11 +4130,13 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JEnableTimeRegulationPending )
 			{
-				throw new RequestForTimeRegulationPending( theException.getMessage(), theException );
+				throw new RequestForTimeRegulationPending( theException.getMessage(),
+				                                           theException );
 			}
 			else if( theException instanceof JEnableTimeConstrainedPending )
 			{
-				throw new RequestForTimeConstrainedPending( theException.getMessage(), theException );
+				throw new RequestForTimeConstrainedPending( theException.getMessage(),
+				                                            theException );
 			}
 			else if( theException instanceof JSaveInProgress )
 			{
@@ -4190,13 +4158,12 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 8.14
-	public void enableAsynchronousDelivery()
-		throws AsynchronousDeliveryAlreadyEnabled,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void enableAsynchronousDelivery() throws AsynchronousDeliveryAlreadyEnabled,
+	                                         SaveInProgress,
+	                                         RestoreInProgress,
+	                                         FederateNotExecutionMember,
+	                                         NotConnected,
+	                                         RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -4223,7 +4190,8 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JAsynchronousDeliveryAlreadyEnabled )
 			{
-				throw new AsynchronousDeliveryAlreadyEnabled( theException.getMessage(), theException );
+				throw new AsynchronousDeliveryAlreadyEnabled( theException.getMessage(),
+				                                              theException );
 			}
 			else if( theException instanceof JSaveInProgress )
 			{
@@ -4245,13 +4213,12 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 8.15
-	public void disableAsynchronousDelivery()
-		throws AsynchronousDeliveryAlreadyDisabled,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void disableAsynchronousDelivery() throws AsynchronousDeliveryAlreadyDisabled,
+	                                          SaveInProgress,
+	                                          RestoreInProgress,
+	                                          FederateNotExecutionMember,
+	                                          NotConnected,
+	                                          RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -4278,7 +4245,8 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else if( theException instanceof JAsynchronousDeliveryAlreadyDisabled )
 			{
-				throw new AsynchronousDeliveryAlreadyDisabled( theException.getMessage(), theException );
+				throw new AsynchronousDeliveryAlreadyDisabled( theException.getMessage(),
+				                                               theException );
 			}
 			else if( theException instanceof JSaveInProgress )
 			{
@@ -4300,12 +4268,11 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 8.16
-	public TimeQueryReturn queryGALT()
-		throws SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public TimeQueryReturn queryGALT() throws SaveInProgress,
+	                                   RestoreInProgress,
+	                                   FederateNotExecutionMember,
+	                                   NotConnected,
+	                                   RTIinternalError
 	{
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -4353,46 +4320,43 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 8.17
-	public LogicalTime queryLogicalTime()
-		throws SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public LogicalTime queryLogicalTime() throws SaveInProgress,
+	                                      RestoreInProgress,
+	                                      FederateNotExecutionMember,
+	                                      NotConnected,
+	                                      RTIinternalError
 	{
 		helper.checkJoined();
 		helper.checkSave();
 		helper.checkRestore();
-		
+
 		return new DoubleTime( helper.getState().getCurrentTime() );
 	}
 
 	// 8.18
-	public TimeQueryReturn queryLITS()
-		throws SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public TimeQueryReturn queryLITS() throws SaveInProgress,
+	                                   RestoreInProgress,
+	                                   FederateNotExecutionMember,
+	                                   NotConnected,
+	                                   RTIinternalError
 	{
 		helper.checkJoined();
 		helper.checkSave();
 		helper.checkRestore();
-		
+
 		DoubleTime time = new DoubleTime( helper.getState().getCurrentTime() );
 		return new TimeQueryReturn( true, time );
 	}
 
 	// 8.19
-	public void modifyLookahead( LogicalTimeInterval theLookahead )
-		throws InvalidLookahead,
-		       InTimeAdvancingState,
-		       TimeRegulationIsNotEnabled,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void modifyLookahead( LogicalTimeInterval theLookahead ) throws InvalidLookahead,
+	                                                                InTimeAdvancingState,
+	                                                                TimeRegulationIsNotEnabled,
+	                                                                SaveInProgress,
+	                                                                RestoreInProgress,
+	                                                                FederateNotExecutionMember,
+	                                                                NotConnected,
+	                                                                RTIinternalError
 	{
 		////////////////////////////////////////////////////////
 		// 0. check that we have the right logical time class //
@@ -4463,31 +4427,29 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 8.20
-	public LogicalTimeInterval queryLookahead()
-		throws TimeRegulationIsNotEnabled,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public LogicalTimeInterval queryLookahead() throws TimeRegulationIsNotEnabled,
+	                                            SaveInProgress,
+	                                            RestoreInProgress,
+	                                            FederateNotExecutionMember,
+	                                            NotConnected,
+	                                            RTIinternalError
 	{
 		helper.checkJoined();
 		helper.checkSave();
 		helper.checkRestore();
-		
+
 		return new DoubleTimeInterval( helper.getState().getLookahead() );
 	}
 
 	// 8.21
-	public void retract( MessageRetractionHandle theHandle )
-		throws MessageCanNoLongerBeRetracted,
-		       InvalidMessageRetractionHandle,
-		       TimeRegulationIsNotEnabled,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void retract( MessageRetractionHandle theHandle ) throws MessageCanNoLongerBeRetracted,
+	                                                         InvalidMessageRetractionHandle,
+	                                                         TimeRegulationIsNotEnabled,
+	                                                         SaveInProgress,
+	                                                         RestoreInProgress,
+	                                                         FederateNotExecutionMember,
+	                                                         NotConnected,
+	                                                         RTIinternalError
 	{
 		featureNotSupported( "retract()" );
 	}
@@ -4495,28 +4457,27 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 8.23
 	public void changeAttributeOrderType( ObjectInstanceHandle theObject,
 	                                      AttributeHandleSet theAttributes,
-	                                      OrderType theType )
-	    throws AttributeNotOwned,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                      OrderType theType ) throws AttributeNotOwned,
+	                                                          AttributeNotDefined,
+	                                                          ObjectInstanceNotKnown,
+	                                                          SaveInProgress,
+	                                                          RestoreInProgress,
+	                                                          FederateNotExecutionMember,
+	                                                          NotConnected,
+	                                                          RTIinternalError
 	{
 		featureNotSupported( "changeAttributeOrderType()" );
 	}
 
 	// 8.24
-	public void changeInteractionOrderType( InteractionClassHandle theClass, OrderType theType )
-	    throws InteractionClassNotPublished,
-	           InteractionClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void changeInteractionOrderType( InteractionClassHandle theClass,
+	                                        OrderType theType ) throws InteractionClassNotPublished,
+	                                                            InteractionClassNotDefined,
+	                                                            SaveInProgress,
+	                                                            RestoreInProgress,
+	                                                            FederateNotExecutionMember,
+	                                                            NotConnected,
+	                                                            RTIinternalError
 	{
 		featureNotSupported( "changeInteractionOrderType()" );
 	}
@@ -4525,85 +4486,78 @@ public class Rti1516eAmbassador implements RTIambassador
 	////////////////////////////// Data Distribution Management ///////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// 9.2
-	public RegionHandle createRegion( DimensionHandleSet dimensions )
-		throws InvalidDimensionHandle,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public RegionHandle createRegion( DimensionHandleSet dimensions ) throws InvalidDimensionHandle,
+	                                                                  SaveInProgress,
+	                                                                  RestoreInProgress,
+	                                                                  FederateNotExecutionMember,
+	                                                                  NotConnected,
+	                                                                  RTIinternalError
 	{
 		featureNotSupported( "createRegion()" );
 		return null;
 	}
 
 	// 9.3
-	public void commitRegionModifications( RegionHandleSet regions )
-	    throws RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void commitRegionModifications( RegionHandleSet regions ) throws RegionNotCreatedByThisFederate,
+	                                                                 InvalidRegion,
+	                                                                 SaveInProgress,
+	                                                                 RestoreInProgress,
+	                                                                 FederateNotExecutionMember,
+	                                                                 NotConnected,
+	                                                                 RTIinternalError
 	{
 		featureNotSupported( "commitRegionModifications()" );
 	}
 
 	// 9.4
-	public void deleteRegion( RegionHandle theRegion )
-		throws RegionInUseForUpdateOrSubscription,
-		       RegionNotCreatedByThisFederate,
-		       InvalidRegion,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void deleteRegion( RegionHandle theRegion ) throws RegionInUseForUpdateOrSubscription,
+	                                                   RegionNotCreatedByThisFederate,
+	                                                   InvalidRegion,
+	                                                   SaveInProgress,
+	                                                   RestoreInProgress,
+	                                                   FederateNotExecutionMember,
+	                                                   NotConnected,
+	                                                   RTIinternalError
 	{
 		featureNotSupported( "deleteRegion()" );
 	}
 
 	// 9.5
-	public ObjectInstanceHandle 
-	       registerObjectInstanceWithRegions( ObjectClassHandle theClass,
-	                                          AttributeSetRegionSetPairList attributesAndRegions )
-	    throws InvalidRegionContext,
-	           RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           AttributeNotPublished,
-	           ObjectClassNotPublished,
-	           AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public ObjectInstanceHandle registerObjectInstanceWithRegions( ObjectClassHandle theClass,
+	                                                               AttributeSetRegionSetPairList attributesAndRegions ) throws InvalidRegionContext,
+	                                                                                                                    RegionNotCreatedByThisFederate,
+	                                                                                                                    InvalidRegion,
+	                                                                                                                    AttributeNotPublished,
+	                                                                                                                    ObjectClassNotPublished,
+	                                                                                                                    AttributeNotDefined,
+	                                                                                                                    ObjectClassNotDefined,
+	                                                                                                                    SaveInProgress,
+	                                                                                                                    RestoreInProgress,
+	                                                                                                                    FederateNotExecutionMember,
+	                                                                                                                    NotConnected,
+	                                                                                                                    RTIinternalError
 	{
 		featureNotSupported( "registerObjectInstanceWithRegions()" );
 		return null;
 	}
 
 	// 9.5
-	public ObjectInstanceHandle
-	       registerObjectInstanceWithRegions( ObjectClassHandle theClass,
-	                                          AttributeSetRegionSetPairList attributesAndRegions,
-	                                          String theObject )
-	    throws ObjectInstanceNameInUse,
-	           ObjectInstanceNameNotReserved,
-	           InvalidRegionContext,
-	           RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           AttributeNotPublished,
-	           ObjectClassNotPublished,
-	           AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public ObjectInstanceHandle registerObjectInstanceWithRegions( ObjectClassHandle theClass,
+	                                                               AttributeSetRegionSetPairList attributesAndRegions,
+	                                                               String theObject ) throws ObjectInstanceNameInUse,
+	                                                                                  ObjectInstanceNameNotReserved,
+	                                                                                  InvalidRegionContext,
+	                                                                                  RegionNotCreatedByThisFederate,
+	                                                                                  InvalidRegion,
+	                                                                                  AttributeNotPublished,
+	                                                                                  ObjectClassNotPublished,
+	                                                                                  AttributeNotDefined,
+	                                                                                  ObjectClassNotDefined,
+	                                                                                  SaveInProgress,
+	                                                                                  RestoreInProgress,
+	                                                                                  FederateNotExecutionMember,
+	                                                                                  NotConnected,
+	                                                                                  RTIinternalError
 	{
 		featureNotSupported( "registerObjectInstanceWithRegions()" );
 		return null;
@@ -4611,50 +4565,47 @@ public class Rti1516eAmbassador implements RTIambassador
 
 	// 9.6
 	public void associateRegionsForUpdates( ObjectInstanceHandle theObject,
-	                                        AttributeSetRegionSetPairList attributesAndRegions )
-	    throws InvalidRegionContext,
-	           RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                        AttributeSetRegionSetPairList attributesAndRegions ) throws InvalidRegionContext,
+	                                                                                             RegionNotCreatedByThisFederate,
+	                                                                                             InvalidRegion,
+	                                                                                             AttributeNotDefined,
+	                                                                                             ObjectInstanceNotKnown,
+	                                                                                             SaveInProgress,
+	                                                                                             RestoreInProgress,
+	                                                                                             FederateNotExecutionMember,
+	                                                                                             NotConnected,
+	                                                                                             RTIinternalError
 	{
 		featureNotSupported( "associateRegionsForUpdates()" );
 	}
 
 	// 9.7
 	public void unassociateRegionsForUpdates( ObjectInstanceHandle theObject,
-	                                          AttributeSetRegionSetPairList attributesAndRegions )
-	    throws RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           AttributeNotDefined,
-	           ObjectInstanceNotKnown,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                          AttributeSetRegionSetPairList attributesAndRegions ) throws RegionNotCreatedByThisFederate,
+	                                                                                               InvalidRegion,
+	                                                                                               AttributeNotDefined,
+	                                                                                               ObjectInstanceNotKnown,
+	                                                                                               SaveInProgress,
+	                                                                                               RestoreInProgress,
+	                                                                                               FederateNotExecutionMember,
+	                                                                                               NotConnected,
+	                                                                                               RTIinternalError
 	{
 		featureNotSupported( "unassociateRegionsForUpdates()" );
 	}
 
 	// 9.8
 	public void subscribeObjectClassAttributesWithRegions( ObjectClassHandle theClass,
-	                                                      AttributeSetRegionSetPairList attributesAndRegions )
-	    throws InvalidRegionContext,
-	           RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                       AttributeSetRegionSetPairList attributesAndRegions ) throws InvalidRegionContext,
+	                                                                                                            RegionNotCreatedByThisFederate,
+	                                                                                                            InvalidRegion,
+	                                                                                                            AttributeNotDefined,
+	                                                                                                            ObjectClassNotDefined,
+	                                                                                                            SaveInProgress,
+	                                                                                                            RestoreInProgress,
+	                                                                                                            FederateNotExecutionMember,
+	                                                                                                            NotConnected,
+	                                                                                                            RTIinternalError
 	{
 		featureNotSupported( "subscribeObjectClassAttributesWithRegions()" );
 	}
@@ -4662,35 +4613,33 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 9.8
 	public void subscribeObjectClassAttributesWithRegions( ObjectClassHandle theClass,
 	                                                       AttributeSetRegionSetPairList attributesAndRegions,
-	                                                       String updateRateDesignator )
-	    throws InvalidRegionContext,
-	           RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           InvalidUpdateRateDesignator,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                       String updateRateDesignator ) throws InvalidRegionContext,
+	                                                                                     RegionNotCreatedByThisFederate,
+	                                                                                     InvalidRegion,
+	                                                                                     AttributeNotDefined,
+	                                                                                     ObjectClassNotDefined,
+	                                                                                     InvalidUpdateRateDesignator,
+	                                                                                     SaveInProgress,
+	                                                                                     RestoreInProgress,
+	                                                                                     FederateNotExecutionMember,
+	                                                                                     NotConnected,
+	                                                                                     RTIinternalError
 	{
 		featureNotSupported( "subscribeObjectClassAttributesWithRegions()" );
 	}
 
 	// 9.8
 	public void subscribeObjectClassAttributesPassivelyWithRegions( ObjectClassHandle theClass,
-	                                                                AttributeSetRegionSetPairList attributesAndRegions )
-	    throws InvalidRegionContext,
-	           RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                                AttributeSetRegionSetPairList attributesAndRegions ) throws InvalidRegionContext,
+	                                                                                                                     RegionNotCreatedByThisFederate,
+	                                                                                                                     InvalidRegion,
+	                                                                                                                     AttributeNotDefined,
+	                                                                                                                     ObjectClassNotDefined,
+	                                                                                                                     SaveInProgress,
+	                                                                                                                     RestoreInProgress,
+	                                                                                                                     FederateNotExecutionMember,
+	                                                                                                                     NotConnected,
+	                                                                                                                     RTIinternalError
 	{
 		featureNotSupported( "subscribeObjectClassAttributesPassivelyWithRegions()" );
 	}
@@ -4698,83 +4647,78 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 9.8
 	public void subscribeObjectClassAttributesPassivelyWithRegions( ObjectClassHandle theClass,
 	                                                                AttributeSetRegionSetPairList attributesAndRegions,
-	                                                                String updateRateDesignator )
-	    throws InvalidRegionContext,
-	           RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           InvalidUpdateRateDesignator,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                                String updateRateDesignator ) throws InvalidRegionContext,
+	                                                                                              RegionNotCreatedByThisFederate,
+	                                                                                              InvalidRegion,
+	                                                                                              AttributeNotDefined,
+	                                                                                              ObjectClassNotDefined,
+	                                                                                              InvalidUpdateRateDesignator,
+	                                                                                              SaveInProgress,
+	                                                                                              RestoreInProgress,
+	                                                                                              FederateNotExecutionMember,
+	                                                                                              NotConnected,
+	                                                                                              RTIinternalError
 	{
 		featureNotSupported( "subscribeObjectClassAttributesPassivelyWithRegions()" );
 	}
 
 	// 9.9
 	public void unsubscribeObjectClassAttributesWithRegions( ObjectClassHandle theClass,
-	                                                         AttributeSetRegionSetPairList attributesAndRegions )
-	    throws RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                         AttributeSetRegionSetPairList attributesAndRegions ) throws RegionNotCreatedByThisFederate,
+	                                                                                                              InvalidRegion,
+	                                                                                                              AttributeNotDefined,
+	                                                                                                              ObjectClassNotDefined,
+	                                                                                                              SaveInProgress,
+	                                                                                                              RestoreInProgress,
+	                                                                                                              FederateNotExecutionMember,
+	                                                                                                              NotConnected,
+	                                                                                                              RTIinternalError
 	{
 		featureNotSupported( "unsubscribeObjectClassAttributesWithRegions()" );
 	}
 
 	// 9.10
 	public void subscribeInteractionClassWithRegions( InteractionClassHandle theClass,
-	                                                  RegionHandleSet regions )
-	    throws FederateServiceInvocationsAreBeingReportedViaMOM,
-	           InvalidRegionContext,
-	           RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           InteractionClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                  RegionHandleSet regions ) throws FederateServiceInvocationsAreBeingReportedViaMOM,
+	                                                                            InvalidRegionContext,
+	                                                                            RegionNotCreatedByThisFederate,
+	                                                                            InvalidRegion,
+	                                                                            InteractionClassNotDefined,
+	                                                                            SaveInProgress,
+	                                                                            RestoreInProgress,
+	                                                                            FederateNotExecutionMember,
+	                                                                            NotConnected,
+	                                                                            RTIinternalError
 	{
 		featureNotSupported( "subscribeInteractionClassWithRegions()" );
 	}
 
 	// 9.10
 	public void subscribeInteractionClassPassivelyWithRegions( InteractionClassHandle theClass,
-	                                                           RegionHandleSet regions )
-	    throws FederateServiceInvocationsAreBeingReportedViaMOM,
-	           InvalidRegionContext,
-	           RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           InteractionClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                           RegionHandleSet regions ) throws FederateServiceInvocationsAreBeingReportedViaMOM,
+	                                                                                     InvalidRegionContext,
+	                                                                                     RegionNotCreatedByThisFederate,
+	                                                                                     InvalidRegion,
+	                                                                                     InteractionClassNotDefined,
+	                                                                                     SaveInProgress,
+	                                                                                     RestoreInProgress,
+	                                                                                     FederateNotExecutionMember,
+	                                                                                     NotConnected,
+	                                                                                     RTIinternalError
 	{
 		featureNotSupported( "subscribeInteractionClassPassivelyWithRegions()" );
 	}
 
 	// 9.11
 	public void unsubscribeInteractionClassWithRegions( InteractionClassHandle theClass,
-	                                                    RegionHandleSet regions )
-	    throws RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           InteractionClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                    RegionHandleSet regions ) throws RegionNotCreatedByThisFederate,
+	                                                                              InvalidRegion,
+	                                                                              InteractionClassNotDefined,
+	                                                                              SaveInProgress,
+	                                                                              RestoreInProgress,
+	                                                                              FederateNotExecutionMember,
+	                                                                              NotConnected,
+	                                                                              RTIinternalError
 	{
 		featureNotSupported( "unsubscribeInteractionClassWithRegions()" );
 	}
@@ -4783,41 +4727,38 @@ public class Rti1516eAmbassador implements RTIambassador
 	public void sendInteractionWithRegions( InteractionClassHandle theInteraction,
 	                                        ParameterHandleValueMap theParameters,
 	                                        RegionHandleSet regions,
-	                                        byte[] userSuppliedTag )
-	    throws InvalidRegionContext,
-	           RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           InteractionClassNotPublished,
-	           InteractionParameterNotDefined,
-	           InteractionClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                        byte[] userSuppliedTag ) throws InvalidRegionContext,
+	                                                                 RegionNotCreatedByThisFederate,
+	                                                                 InvalidRegion,
+	                                                                 InteractionClassNotPublished,
+	                                                                 InteractionParameterNotDefined,
+	                                                                 InteractionClassNotDefined,
+	                                                                 SaveInProgress,
+	                                                                 RestoreInProgress,
+	                                                                 FederateNotExecutionMember,
+	                                                                 NotConnected,
+	                                                                 RTIinternalError
 	{
 		featureNotSupported( "sendInteractionWithRegions()" );
 	}
 
 	// 9.12
-	public MessageRetractionReturn
-	       sendInteractionWithRegions( InteractionClassHandle theInteraction,
-	                                   ParameterHandleValueMap theParameters,
-	                                   RegionHandleSet regions,
-	                                   byte[] userSuppliedTag,
-	                                   LogicalTime theTime )
-	    throws InvalidLogicalTime,
-	           InvalidRegionContext,
-	           RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           InteractionClassNotPublished,
-	           InteractionParameterNotDefined,
-	           InteractionClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public MessageRetractionReturn sendInteractionWithRegions( InteractionClassHandle theInteraction,
+	                                                           ParameterHandleValueMap theParameters,
+	                                                           RegionHandleSet regions,
+	                                                           byte[] userSuppliedTag,
+	                                                           LogicalTime theTime ) throws InvalidLogicalTime,
+	                                                                                 InvalidRegionContext,
+	                                                                                 RegionNotCreatedByThisFederate,
+	                                                                                 InvalidRegion,
+	                                                                                 InteractionClassNotPublished,
+	                                                                                 InteractionParameterNotDefined,
+	                                                                                 InteractionClassNotDefined,
+	                                                                                 SaveInProgress,
+	                                                                                 RestoreInProgress,
+	                                                                                 FederateNotExecutionMember,
+	                                                                                 NotConnected,
+	                                                                                 RTIinternalError
 	{
 		featureNotSupported( "sendInteractionWithRegions()" );
 		return null;
@@ -4826,17 +4767,16 @@ public class Rti1516eAmbassador implements RTIambassador
 	// 9.13
 	public void requestAttributeValueUpdateWithRegions( ObjectClassHandle theClass,
 	                                                    AttributeSetRegionSetPairList attributesAndRegions,
-	                                                    byte[] userSuppliedTag )
-	    throws InvalidRegionContext,
-	           RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           AttributeNotDefined,
-	           ObjectClassNotDefined,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                    byte[] userSuppliedTag ) throws InvalidRegionContext,
+	                                                                             RegionNotCreatedByThisFederate,
+	                                                                             InvalidRegion,
+	                                                                             AttributeNotDefined,
+	                                                                             ObjectClassNotDefined,
+	                                                                             SaveInProgress,
+	                                                                             RestoreInProgress,
+	                                                                             FederateNotExecutionMember,
+	                                                                             NotConnected,
+	                                                                             RTIinternalError
 	{
 		featureNotSupported( "requestAttributeValueUpdateWithRegions()" );
 	}
@@ -4845,64 +4785,59 @@ public class Rti1516eAmbassador implements RTIambassador
 	////////////////////////////////// RTI Support Services ///////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////
 	// 10.2
-	public ResignAction getAutomaticResignDirective()
-		throws FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public ResignAction getAutomaticResignDirective() throws FederateNotExecutionMember,
+	                                                  NotConnected,
+	                                                  RTIinternalError
 	{
 		featureNotSupported( "getAutomaticResignDirective()" );
 		return null;
 	}
 
 	// 10.3
-	public void setAutomaticResignDirective( ResignAction resignAction )
-		throws InvalidResignAction,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void setAutomaticResignDirective( ResignAction resignAction ) throws InvalidResignAction,
+	                                                                     FederateNotExecutionMember,
+	                                                                     NotConnected,
+	                                                                     RTIinternalError
 	{
 		featureNotSupported( "setAutomaticResignDirective()" );
 	}
 
 	// 10.4
-	public FederateHandle getFederateHandle( String theName )
-		throws NameNotFound,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public FederateHandle getFederateHandle( String theName ) throws NameNotFound,
+	                                                          FederateNotExecutionMember,
+	                                                          NotConnected,
+	                                                          RTIinternalError
 	{
 		featureNotSupported( "getFederateHandle()" );
 		return null;
 	}
 
 	// 10.5
-	public String getFederateName( FederateHandle theHandle )
-		throws InvalidFederateHandle,
-	           FederateHandleNotKnown,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public String getFederateName( FederateHandle theHandle ) throws InvalidFederateHandle,
+	                                                          FederateHandleNotKnown,
+	                                                          FederateNotExecutionMember,
+	                                                          NotConnected,
+	                                                          RTIinternalError
 	{
 		helper.checkJoined();
-		
+
 		// get a reference to all the known federates
 		int handle = HLA1516eHandle.validatedHandle( theHandle );
 		Federate federate = helper.getLrc().getState().getKnownFederate( handle );
 		if( federate == null )
-			throw new InvalidFederateHandle( "No known federate for handle ["+handle+"]" );
+			throw new InvalidFederateHandle( "No known federate for handle [" + handle + "]" );
 		else
 			return federate.getFederateName();
 	}
 
 	// 10.6
-	public ObjectClassHandle getObjectClassHandle( String theName )
-		throws NameNotFound,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public ObjectClassHandle getObjectClassHandle( String theName ) throws NameNotFound,
+	                                                                FederateNotExecutionMember,
+	                                                                NotConnected,
+	                                                                RTIinternalError
 	{
 		helper.checkJoined();
-		
+
 		// get the class
 		OCMetadata cls = helper.getFOM().getObjectClass( theName );
 		if( cls == null )
@@ -4916,14 +4851,13 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 10.7
-	public String getObjectClassName( ObjectClassHandle theHandle )
-		throws InvalidObjectClassHandle,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public String getObjectClassName( ObjectClassHandle theHandle ) throws InvalidObjectClassHandle,
+	                                                                FederateNotExecutionMember,
+	                                                                NotConnected,
+	                                                                RTIinternalError
 	{
 		helper.checkJoined();
-		
+
 		// get the class
 		int handle = HLA1516eHandle.validatedHandle( theHandle );
 		OCMetadata cls = helper.getFOM().getObjectClass( handle );
@@ -4938,14 +4872,13 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 10.8
-	public ObjectClassHandle getKnownObjectClassHandle( ObjectInstanceHandle theObject )
-	    throws ObjectInstanceNotKnown,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public ObjectClassHandle getKnownObjectClassHandle( ObjectInstanceHandle theObject ) throws ObjectInstanceNotKnown,
+	                                                                                     FederateNotExecutionMember,
+	                                                                                     NotConnected,
+	                                                                                     RTIinternalError
 	{
 		helper.checkJoined();
-		
+
 		OCInstance instance = helper.getState().getRepository().getInstance( theObject.hashCode() );
 		if( instance == null )
 			throw new ObjectInstanceNotKnown( "handle: " + theObject );
@@ -4954,14 +4887,13 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 10.9
-	public ObjectInstanceHandle getObjectInstanceHandle( String theName )
-		throws ObjectInstanceNotKnown,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public ObjectInstanceHandle getObjectInstanceHandle( String theName ) throws ObjectInstanceNotKnown,
+	                                                                      FederateNotExecutionMember,
+	                                                                      NotConnected,
+	                                                                      RTIinternalError
 	{
 		helper.checkJoined();
-		
+
 		OCInstance instance = helper.getState().getRepository().getInstance( theName );
 		if( instance == null )
 		{
@@ -4974,14 +4906,13 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 10.10
-	public String getObjectInstanceName( ObjectInstanceHandle theHandle )
-		throws ObjectInstanceNotKnown,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public String getObjectInstanceName( ObjectInstanceHandle theHandle ) throws ObjectInstanceNotKnown,
+	                                                                      FederateNotExecutionMember,
+	                                                                      NotConnected,
+	                                                                      RTIinternalError
 	{
 		helper.checkJoined();
-		
+
 		int handle = HLA1516eHandle.validatedHandle( theHandle );
 		OCInstance instance = helper.getState().getRepository().getInstance( handle );
 		if( instance == null )
@@ -4995,22 +4926,22 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 10.11
-	public AttributeHandle getAttributeHandle( ObjectClassHandle whichClass, String theName )
-	    throws NameNotFound,
-	           InvalidObjectClassHandle,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public AttributeHandle getAttributeHandle( ObjectClassHandle whichClass,
+	                                           String theName ) throws NameNotFound,
+	                                                            InvalidObjectClassHandle,
+	                                                            FederateNotExecutionMember,
+	                                                            NotConnected,
+	                                                            RTIinternalError
 	{
 		helper.checkJoined();
-		
+
 		int cHandle = HLA1516eHandle.validatedHandle( whichClass );
 		OCMetadata cls = helper.getFOM().getObjectClass( cHandle );
 		if( cls == null )
 		{
 			throw new InvalidObjectClassHandle( "handle: " + whichClass );
 		}
-		
+
 		ACMetadata aClass = helper.getFOM().getAttributeClass( cHandle, theName );
 		if( aClass == null )
 		{
@@ -5023,16 +4954,16 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 10.12
-	public String getAttributeName( ObjectClassHandle whichClass, AttributeHandle theHandle )
-	    throws AttributeNotDefined,
-	           InvalidAttributeHandle,
-	           InvalidObjectClassHandle,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public String getAttributeName( ObjectClassHandle whichClass,
+	                                AttributeHandle theHandle ) throws AttributeNotDefined,
+	                                                            InvalidAttributeHandle,
+	                                                            InvalidObjectClassHandle,
+	                                                            FederateNotExecutionMember,
+	                                                            NotConnected,
+	                                                            RTIinternalError
 	{
 		helper.checkJoined();
-		
+
 		int ocHandle = HLA1516eHandle.validatedHandle( whichClass );
 		int acHandle = HLA1516eHandle.validatedHandle( theHandle );
 		OCMetadata cls = helper.getFOM().getObjectClass( ocHandle );
@@ -5055,11 +4986,10 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 10.13
-	public double getUpdateRateValue( String updateRateDesignator )
-		throws InvalidUpdateRateDesignator,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public double getUpdateRateValue( String updateRateDesignator ) throws InvalidUpdateRateDesignator,
+	                                                                FederateNotExecutionMember,
+	                                                                NotConnected,
+	                                                                RTIinternalError
 	{
 		featureNotSupported( "getUpdateRateValue()" );
 		return 0.0;
@@ -5067,26 +4997,24 @@ public class Rti1516eAmbassador implements RTIambassador
 
 	// 10.14
 	public double getUpdateRateValueForAttribute( ObjectInstanceHandle theObject,
-	                                              AttributeHandle theAttribute )
-	    throws ObjectInstanceNotKnown,
-	           AttributeNotDefined,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                              AttributeHandle theAttribute ) throws ObjectInstanceNotKnown,
+	                                                                             AttributeNotDefined,
+	                                                                             FederateNotExecutionMember,
+	                                                                             NotConnected,
+	                                                                             RTIinternalError
 	{
 		featureNotSupported( "getUpdateRateValueForAttribute()" );
 		return 0.0;
 	}
 
 	// 10.15
-	public InteractionClassHandle getInteractionClassHandle( String theName )
-		throws NameNotFound,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public InteractionClassHandle getInteractionClassHandle( String theName ) throws NameNotFound,
+	                                                                          FederateNotExecutionMember,
+	                                                                          NotConnected,
+	                                                                          RTIinternalError
 	{
 		helper.checkJoined();
-		
+
 		// get the class
 		ICMetadata cls = helper.getFOM().getInteractionClass( theName );
 		if( cls == null )
@@ -5100,14 +5028,13 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 10.16
-	public String getInteractionClassName( InteractionClassHandle theHandle )
-	    throws InvalidInteractionClassHandle,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public String getInteractionClassName( InteractionClassHandle theHandle ) throws InvalidInteractionClassHandle,
+	                                                                          FederateNotExecutionMember,
+	                                                                          NotConnected,
+	                                                                          RTIinternalError
 	{
 		helper.checkJoined();
-		
+
 		// get the class
 		int handle = HLA1516eHandle.validatedHandle( theHandle );
 		ICMetadata cls = helper.getFOM().getInteractionClass( handle );
@@ -5122,15 +5049,15 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 10.17
-	public ParameterHandle getParameterHandle( InteractionClassHandle whichClass, String theName )
-	    throws NameNotFound,
-	           InvalidInteractionClassHandle,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public ParameterHandle getParameterHandle( InteractionClassHandle whichClass,
+	                                           String theName ) throws NameNotFound,
+	                                                            InvalidInteractionClassHandle,
+	                                                            FederateNotExecutionMember,
+	                                                            NotConnected,
+	                                                            RTIinternalError
 	{
 		helper.checkJoined();
-		
+
 		int cHandle = HLA1516eHandle.validatedHandle( whichClass );
 		ICMetadata cls = helper.getFOM().getInteractionClass( cHandle );
 		if( cls == null )
@@ -5152,16 +5079,16 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 10.18
-	public String getParameterName( InteractionClassHandle whichClass, ParameterHandle theHandle )
-	    throws InteractionParameterNotDefined,
-	           InvalidParameterHandle,
-	           InvalidInteractionClassHandle,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public String getParameterName( InteractionClassHandle whichClass,
+	                                ParameterHandle theHandle ) throws InteractionParameterNotDefined,
+	                                                            InvalidParameterHandle,
+	                                                            InvalidInteractionClassHandle,
+	                                                            FederateNotExecutionMember,
+	                                                            NotConnected,
+	                                                            RTIinternalError
 	{
 		helper.checkJoined();
-		
+
 		int icHandle = HLA1516eHandle.validatedHandle( whichClass );
 		int pcHandle = HLA1516eHandle.validatedHandle( theHandle );
 		ICMetadata cls = helper.getFOM().getInteractionClass( icHandle );
@@ -5184,44 +5111,40 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 10.19
-	public OrderType getOrderType( String theName )
-		throws InvalidOrderName,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public OrderType getOrderType( String theName ) throws InvalidOrderName,
+	                                                FederateNotExecutionMember,
+	                                                NotConnected,
+	                                                RTIinternalError
 	{
 		featureNotSupported( "getOrderType()" );
 		return null;
 	}
 
 	// 10.20
-	public String getOrderName( OrderType theType )
-		throws InvalidOrderType,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public String getOrderName( OrderType theType ) throws InvalidOrderType,
+	                                                FederateNotExecutionMember,
+	                                                NotConnected,
+	                                                RTIinternalError
 	{
 		featureNotSupported( "getOrderName()" );
 		return null;
 	}
 
 	// 10.21
-	public TransportationTypeHandle getTransportationTypeHandle( String theName )
-	    throws InvalidTransportationName,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public TransportationTypeHandle getTransportationTypeHandle( String theName ) throws InvalidTransportationName,
+	                                                                              FederateNotExecutionMember,
+	                                                                              NotConnected,
+	                                                                              RTIinternalError
 	{
 		featureNotSupported( "getTransportationTypeHandle()" );
 		return null;
 	}
 
 	// 10.22
-	public String getTransportationTypeName( TransportationTypeHandle theHandle )
-	    throws InvalidTransportationType,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public String getTransportationTypeName( TransportationTypeHandle theHandle ) throws InvalidTransportationType,
+	                                                                              FederateNotExecutionMember,
+	                                                                              NotConnected,
+	                                                                              RTIinternalError
 	{
 		featureNotSupported( "getTransportationTypeName()" );
 		return null;
@@ -5229,242 +5152,226 @@ public class Rti1516eAmbassador implements RTIambassador
 
 	// 10.23
 	public DimensionHandleSet getAvailableDimensionsForClassAttribute( ObjectClassHandle whichClass,
-	                                                                   AttributeHandle theHandle )
-	    throws AttributeNotDefined,
-	           InvalidAttributeHandle,
-	           InvalidObjectClassHandle,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	                                                                   AttributeHandle theHandle ) throws AttributeNotDefined,
+	                                                                                               InvalidAttributeHandle,
+	                                                                                               InvalidObjectClassHandle,
+	                                                                                               FederateNotExecutionMember,
+	                                                                                               NotConnected,
+	                                                                                               RTIinternalError
 	{
 		featureNotSupported( "getAvailableDimensionsForClassAttribute()" );
 		return null;
 	}
 
 	// 10.24
-	public DimensionHandleSet
-	       getAvailableDimensionsForInteractionClass( InteractionClassHandle theHandle )
-	    throws InvalidInteractionClassHandle,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public DimensionHandleSet getAvailableDimensionsForInteractionClass( InteractionClassHandle theHandle ) throws InvalidInteractionClassHandle,
+	                                                                                                        FederateNotExecutionMember,
+	                                                                                                        NotConnected,
+	                                                                                                        RTIinternalError
 	{
 		featureNotSupported( "getAvailableDimensionsForInteractionClass()" );
 		return null;
 	}
 
 	// 10.25
-	public DimensionHandle getDimensionHandle( String theName )
-		throws NameNotFound,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public DimensionHandle getDimensionHandle( String theName ) throws NameNotFound,
+	                                                            FederateNotExecutionMember,
+	                                                            NotConnected,
+	                                                            RTIinternalError
 	{
 		featureNotSupported( "getDimensionHandle()" );
 		return null;
 	}
 
 	// 10.26
-	public String getDimensionName( DimensionHandle theHandle )
-		throws InvalidDimensionHandle,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public String getDimensionName( DimensionHandle theHandle ) throws InvalidDimensionHandle,
+	                                                            FederateNotExecutionMember,
+	                                                            NotConnected,
+	                                                            RTIinternalError
 	{
 		featureNotSupported( "getDimensionName()" );
 		return null;
 	}
 
 	// 10.27
-	public long getDimensionUpperBound( DimensionHandle theHandle ) 
-		throws InvalidDimensionHandle,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public long getDimensionUpperBound( DimensionHandle theHandle ) throws InvalidDimensionHandle,
+	                                                                FederateNotExecutionMember,
+	                                                                NotConnected,
+	                                                                RTIinternalError
 	{
 		featureNotSupported( "getDimensionUpperBound()" );
 		return 0;
 	}
 
 	// 10.28
-	public DimensionHandleSet getDimensionHandleSet( RegionHandle region )
-		throws InvalidRegion,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public DimensionHandleSet getDimensionHandleSet( RegionHandle region ) throws InvalidRegion,
+	                                                                       SaveInProgress,
+	                                                                       RestoreInProgress,
+	                                                                       FederateNotExecutionMember,
+	                                                                       NotConnected,
+	                                                                       RTIinternalError
 	{
 		featureNotSupported( "getDimensionHandleSet()" );
 		return null;
 	}
 
 	// 10.29
-	public RangeBounds getRangeBounds( RegionHandle region, DimensionHandle dimension )
-	    throws RegionDoesNotContainSpecifiedDimension,
-	           InvalidRegion,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public RangeBounds getRangeBounds( RegionHandle region,
+	                                   DimensionHandle dimension ) throws RegionDoesNotContainSpecifiedDimension,
+	                                                               InvalidRegion,
+	                                                               SaveInProgress,
+	                                                               RestoreInProgress,
+	                                                               FederateNotExecutionMember,
+	                                                               NotConnected,
+	                                                               RTIinternalError
 	{
 		featureNotSupported( "getRangeBounds()" );
 		return null;
 	}
 
 	// 10.30
-	public void setRangeBounds( RegionHandle region, DimensionHandle dimension, RangeBounds bounds )
-	    throws InvalidRangeBound,
-	           RegionDoesNotContainSpecifiedDimension,
-	           RegionNotCreatedByThisFederate,
-	           InvalidRegion,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void setRangeBounds( RegionHandle region,
+	                            DimensionHandle dimension,
+	                            RangeBounds bounds ) throws InvalidRangeBound,
+	                                                 RegionDoesNotContainSpecifiedDimension,
+	                                                 RegionNotCreatedByThisFederate,
+	                                                 InvalidRegion,
+	                                                 SaveInProgress,
+	                                                 RestoreInProgress,
+	                                                 FederateNotExecutionMember,
+	                                                 NotConnected,
+	                                                 RTIinternalError
 	{
 		featureNotSupported( "setRangeBounds()" );
 	}
 
 	// 10.31
-	public long normalizeFederateHandle( FederateHandle federateHandle )
-		throws InvalidFederateHandle,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public long normalizeFederateHandle( FederateHandle federateHandle ) throws InvalidFederateHandle,
+	                                                                     FederateNotExecutionMember,
+	                                                                     NotConnected,
+	                                                                     RTIinternalError
 	{
 		return HLA1516eHandle.fromHandle( federateHandle );
 	}
 
 	// 10.32
-	public long normalizeServiceGroup( ServiceGroup group )
-		throws InvalidServiceGroup,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public long normalizeServiceGroup( ServiceGroup group ) throws InvalidServiceGroup,
+	                                                        FederateNotExecutionMember,
+	                                                        NotConnected,
+	                                                        RTIinternalError
 	{
 		featureNotSupported( "normalizeServiceGroup()" );
 		return 0;
 	}
 
 	// 10.33
-	public void enableObjectClassRelevanceAdvisorySwitch()
-		throws ObjectClassRelevanceAdvisorySwitchIsOn,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void enableObjectClassRelevanceAdvisorySwitch() throws ObjectClassRelevanceAdvisorySwitchIsOn,
+	                                                       SaveInProgress,
+	                                                       RestoreInProgress,
+	                                                       FederateNotExecutionMember,
+	                                                       NotConnected,
+	                                                       RTIinternalError
 	{
 		featureNotSupported( "enableObjectClassRelevanceAdvisorySwitch()" );
 	}
 
 	// 10.34
-	public void disableObjectClassRelevanceAdvisorySwitch()
-	    throws ObjectClassRelevanceAdvisorySwitchIsOff,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void disableObjectClassRelevanceAdvisorySwitch() throws ObjectClassRelevanceAdvisorySwitchIsOff,
+	                                                        SaveInProgress,
+	                                                        RestoreInProgress,
+	                                                        FederateNotExecutionMember,
+	                                                        NotConnected,
+	                                                        RTIinternalError
 	{
 		featureNotSupported( "disableObjectClassRelevanceAdvisorySwitch()" );
 	}
 
 	// 10.35
-	public void enableAttributeRelevanceAdvisorySwitch()
-		throws AttributeRelevanceAdvisorySwitchIsOn,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void enableAttributeRelevanceAdvisorySwitch() throws AttributeRelevanceAdvisorySwitchIsOn,
+	                                                     SaveInProgress,
+	                                                     RestoreInProgress,
+	                                                     FederateNotExecutionMember,
+	                                                     NotConnected,
+	                                                     RTIinternalError
 	{
 		featureNotSupported( "enableAttributeRelevanceAdvisorySwitch()" );
 	}
 
 	// 10.36
-	public void disableAttributeRelevanceAdvisorySwitch()
-		throws AttributeRelevanceAdvisorySwitchIsOff,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void disableAttributeRelevanceAdvisorySwitch() throws AttributeRelevanceAdvisorySwitchIsOff,
+	                                                      SaveInProgress,
+	                                                      RestoreInProgress,
+	                                                      FederateNotExecutionMember,
+	                                                      NotConnected,
+	                                                      RTIinternalError
 	{
 		featureNotSupported( "disableAttributeRelevanceAdvisorySwitch()" );
 	}
 
 	// 10.37
-	public void enableAttributeScopeAdvisorySwitch()
-		throws AttributeScopeAdvisorySwitchIsOn,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void enableAttributeScopeAdvisorySwitch() throws AttributeScopeAdvisorySwitchIsOn,
+	                                                 SaveInProgress,
+	                                                 RestoreInProgress,
+	                                                 FederateNotExecutionMember,
+	                                                 NotConnected,
+	                                                 RTIinternalError
 	{
 		featureNotSupported( "enableAttributeScopeAdvisorySwitch()" );
 	}
 
 	// 10.38
-	public void disableAttributeScopeAdvisorySwitch()
-		throws AttributeScopeAdvisorySwitchIsOff,
-		       SaveInProgress,
-		       RestoreInProgress,
-		       FederateNotExecutionMember,
-		       NotConnected,
-		       RTIinternalError
+	public void disableAttributeScopeAdvisorySwitch() throws AttributeScopeAdvisorySwitchIsOff,
+	                                                  SaveInProgress,
+	                                                  RestoreInProgress,
+	                                                  FederateNotExecutionMember,
+	                                                  NotConnected,
+	                                                  RTIinternalError
 	{
 		featureNotSupported( "disableAttributeScopeAdvisorySwitch()" );
 	}
 
 	// 10.39
-	public void enableInteractionRelevanceAdvisorySwitch()
-		throws InteractionRelevanceAdvisorySwitchIsOn,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void enableInteractionRelevanceAdvisorySwitch() throws InteractionRelevanceAdvisorySwitchIsOn,
+	                                                       SaveInProgress,
+	                                                       RestoreInProgress,
+	                                                       FederateNotExecutionMember,
+	                                                       NotConnected,
+	                                                       RTIinternalError
 	{
 		featureNotSupported( "enableInteractionRelevanceAdvisorySwitch()" );
 	}
 
 	// 10.40
-	public void disableInteractionRelevanceAdvisorySwitch()
-	    throws InteractionRelevanceAdvisorySwitchIsOff,
-	           SaveInProgress,
-	           RestoreInProgress,
-	           FederateNotExecutionMember,
-	           NotConnected,
-	           RTIinternalError
+	public void disableInteractionRelevanceAdvisorySwitch() throws InteractionRelevanceAdvisorySwitchIsOff,
+	                                                        SaveInProgress,
+	                                                        RestoreInProgress,
+	                                                        FederateNotExecutionMember,
+	                                                        NotConnected,
+	                                                        RTIinternalError
 	{
 		featureNotSupported( "disableInteractionRelevanceAdvisorySwitch()" );
 	}
 
 	// 10.41
-	public boolean evokeCallback( double approximateMinimumTimeInSeconds )
-	    throws CallNotAllowedFromWithinCallback,
-	           RTIinternalError
+	public boolean evokeCallback( double approximateMinimumTimeInSeconds ) throws CallNotAllowedFromWithinCallback,
+	                                                                       RTIinternalError
 	{
 		return helper.evokeSingle( approximateMinimumTimeInSeconds );
 	}
 
 	// 10.42
 	public boolean evokeMultipleCallbacks( double approximateMinimumTimeInSeconds,
-	                                       double approximateMaximumTimeInSeconds )
-	    throws CallNotAllowedFromWithinCallback,
-	           RTIinternalError
+	                                       double approximateMaximumTimeInSeconds ) throws CallNotAllowedFromWithinCallback,
+	                                                                                RTIinternalError
 	{
 		return helper.evokeMultiple( approximateMinimumTimeInSeconds,
 		                             approximateMaximumTimeInSeconds );
 	}
 
 	// 10.43
-	public void enableCallbacks() throws SaveInProgress, RestoreInProgress, RTIinternalError
+	public void enableCallbacks() throws SaveInProgress,
+	                              RestoreInProgress,
+	                              RTIinternalError
 	{
 		helper.checkSave();
 		helper.checkRestore();
@@ -5473,7 +5380,9 @@ public class Rti1516eAmbassador implements RTIambassador
 	}
 
 	// 10.44
-	public void disableCallbacks() throws SaveInProgress, RestoreInProgress, RTIinternalError
+	public void disableCallbacks() throws SaveInProgress,
+	                               RestoreInProgress,
+	                               RTIinternalError
 	{
 		helper.checkSave();
 		helper.checkRestore();
@@ -5484,92 +5393,92 @@ public class Rti1516eAmbassador implements RTIambassador
 	///////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////// API-specific services //////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////
-	public AttributeHandleFactory getAttributeHandleFactory()
-		throws FederateNotExecutionMember, NotConnected
+	public AttributeHandleFactory getAttributeHandleFactory() throws FederateNotExecutionMember,
+	                                                          NotConnected
 	{
 		return new HLA1516eAttributeHandleFactory();
 	}
 
-	public AttributeHandleSetFactory getAttributeHandleSetFactory()
-		throws FederateNotExecutionMember, NotConnected
+	public AttributeHandleSetFactory getAttributeHandleSetFactory() throws FederateNotExecutionMember,
+	                                                                NotConnected
 	{
 		return new HLA1516eAttributeHandleSetFactory();
 	}
 
-	public AttributeHandleValueMapFactory getAttributeHandleValueMapFactory()
-	    throws FederateNotExecutionMember, NotConnected
+	public AttributeHandleValueMapFactory getAttributeHandleValueMapFactory() throws FederateNotExecutionMember,
+	                                                                          NotConnected
 	{
 		return new HLA1516eAttributeHandleValueMapFactory();
 	}
 
-	public AttributeSetRegionSetPairListFactory getAttributeSetRegionSetPairListFactory()
-	    throws FederateNotExecutionMember, NotConnected
+	public AttributeSetRegionSetPairListFactory getAttributeSetRegionSetPairListFactory() throws FederateNotExecutionMember,
+	                                                                                      NotConnected
 	{
 		return new HLA1516eAttributeSetRegionSetPairListFactory();
 	}
 
-	public DimensionHandleFactory getDimensionHandleFactory()
-		throws FederateNotExecutionMember, NotConnected
+	public DimensionHandleFactory getDimensionHandleFactory() throws FederateNotExecutionMember,
+	                                                          NotConnected
 	{
 		return new HLA1516eDimensionHandleFactory();
 	}
 
-	public DimensionHandleSetFactory getDimensionHandleSetFactory()
-		throws FederateNotExecutionMember, NotConnected
+	public DimensionHandleSetFactory getDimensionHandleSetFactory() throws FederateNotExecutionMember,
+	                                                                NotConnected
 	{
 		return new HLA1516eDimensionHandleSetFactory();
 	}
 
-	public FederateHandleFactory getFederateHandleFactory()
-		throws FederateNotExecutionMember, NotConnected
+	public FederateHandleFactory getFederateHandleFactory() throws FederateNotExecutionMember,
+	                                                        NotConnected
 	{
 		return new HLA1516eFederateHandleFactory();
 	}
 
-	public FederateHandleSetFactory getFederateHandleSetFactory()
-		throws FederateNotExecutionMember, NotConnected
+	public FederateHandleSetFactory getFederateHandleSetFactory() throws FederateNotExecutionMember,
+	                                                              NotConnected
 	{
 		return new HLA1516eFederateHandleSetFactory();
 	}
 
-	public InteractionClassHandleFactory getInteractionClassHandleFactory()
-	    throws FederateNotExecutionMember, NotConnected
+	public InteractionClassHandleFactory getInteractionClassHandleFactory() throws FederateNotExecutionMember,
+	                                                                        NotConnected
 	{
 		return new HLA1516eInteractionClassHandleFactory();
 	}
 
-	public ObjectClassHandleFactory getObjectClassHandleFactory()
-		throws FederateNotExecutionMember, NotConnected
+	public ObjectClassHandleFactory getObjectClassHandleFactory() throws FederateNotExecutionMember,
+	                                                              NotConnected
 	{
 		return new HLA1516eObjectClassHandleFactory();
 	}
 
-	public ObjectInstanceHandleFactory getObjectInstanceHandleFactory()
-		throws FederateNotExecutionMember, NotConnected
+	public ObjectInstanceHandleFactory getObjectInstanceHandleFactory() throws FederateNotExecutionMember,
+	                                                                    NotConnected
 	{
 		return new HLA1516eObjectInstanceHandleFactory();
 	}
 
-	public ParameterHandleFactory getParameterHandleFactory()
-		throws FederateNotExecutionMember, NotConnected
+	public ParameterHandleFactory getParameterHandleFactory() throws FederateNotExecutionMember,
+	                                                          NotConnected
 	{
 		return new HLA1516eParameterHandleFactory();
 	}
 
-	public ParameterHandleValueMapFactory getParameterHandleValueMapFactory()
-	    throws FederateNotExecutionMember, NotConnected
+	public ParameterHandleValueMapFactory getParameterHandleValueMapFactory() throws FederateNotExecutionMember,
+	                                                                          NotConnected
 	{
 		return new HLA1516eParameterHandleValueMapFactory();
 	}
 
-	public RegionHandleSetFactory getRegionHandleSetFactory()
-		throws FederateNotExecutionMember, NotConnected
+	public RegionHandleSetFactory getRegionHandleSetFactory() throws FederateNotExecutionMember,
+	                                                          NotConnected
 	{
 		return new HLA1516eRegionHandleSetFactory();
 	}
 
-	public TransportationTypeHandleFactory getTransportationTypeHandleFactory()
-	    throws FederateNotExecutionMember, NotConnected
+	public TransportationTypeHandleFactory getTransportationTypeHandleFactory() throws FederateNotExecutionMember,
+	                                                                            NotConnected
 	{
 		return new HLA1516eTransportationTypeHandleFactory();
 	}
@@ -5579,7 +5488,8 @@ public class Rti1516eAmbassador implements RTIambassador
 		return "Portico (ieee-1516e)";
 	}
 
-	public LogicalTimeFactory getTimeFactory() throws FederateNotExecutionMember, NotConnected
+	public LogicalTimeFactory getTimeFactory() throws FederateNotExecutionMember,
+	                                           NotConnected
 	{
 		return new DoubleTimeFactory();
 	}
@@ -5593,23 +5503,23 @@ public class Rti1516eAmbassador implements RTIambassador
 		this.helper.checkConnected();
 
 		try
-		{	
+		{
 			// make sure we don't have concurrent access problems
 			this.helper.checkAccess();
-			
+
 			// remove the time from the message if we are not constrained
 			if( this.helper.getState().isRegulating() == false )
 			{
 				request.setTimestamp( PorticoConstants.NULL_TIME );
 			}
-			
+
 			// set the source federate, if we have not joined yet (or have resigned)
 			// this will be null
 			request.setSourceFederate( this.helper.getState().getFederateHandle() );
-			
+
 			// create the context
 			MessageContext message = new MessageContext( request );
-	
+
 			// pass it to the sink
 			helper.processMessage( message );
 
@@ -5617,7 +5527,7 @@ public class Rti1516eAmbassador implements RTIambassador
 			if( message.getResponse() == null )
 			{
 				throw new RTIinternalError( "No response from RTI (null) for message type: " +
-											request.getIdentifier() );
+				                            request.getIdentifier() );
 			}
 
 			// if the response is an error, log it
@@ -5625,7 +5535,7 @@ public class Rti1516eAmbassador implements RTIambassador
 			{
 				helper.getLrcLogger().error( ((ErrorResponse)message.getResponse()).getCause() );
 			}
-			
+
 			// return the response
 			return message.getResponse();
 		}
@@ -5636,21 +5546,21 @@ public class Rti1516eAmbassador implements RTIambassador
 			// indication of an error (sometimes we expect them). Rather than
 			// clutter system out with this detail by default, log it at debug
 			this.helper.getLrcLogger().debug( e );
-			
+
 			// there was an exception, pacakge a response
 			return new ErrorResponse( e );
 		}
 	}
-	
+
 	/**
-	 * This method prints the stack trace for the exception and then throws an RTIinternalError 
+	 * This method prints the stack trace for the exception and then throws an RTIinternalError
 	 */
 	private void logException( String method, Throwable e ) throws RTIinternalError
 	{
 		throw new RTIinternalError( "Unknown exception received from RTI (" + e.getClass() +
-			") for " + method + "(): "+ e.getMessage(), e );
+		                            ") for " + method + "(): " + e.getMessage(), e );
 	}
-	
+
 	/**
 	 * Logs that the user tried to call a method that isn't supported yet and then throws an
 	 * RTIinternalError.
@@ -5659,7 +5569,8 @@ public class Rti1516eAmbassador implements RTIambassador
 	{
 		logger.warn( "The IEEE 1516e interface doesn't yet support " + methodName );
 		if( PorticoConstants.shouldThrowExceptionForUnsupportedCall() )
-			throw new RTIinternalError( "The IEEE 1516e interface doesn't yet support "+methodName );
+			throw new RTIinternalError( "The IEEE 1516e interface doesn't yet support " +
+			                            methodName );
 	}
 
 	//----------------------------------------------------------
