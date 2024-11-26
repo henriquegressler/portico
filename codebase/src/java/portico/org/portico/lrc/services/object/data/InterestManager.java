@@ -46,8 +46,8 @@ import org.portico.lrc.services.saverestore.data.SaveRestoreTarget;
  * information. It works by storing groups of {@link OCInterest} and {@link ICInterest} instances
  * for each object/interaction class. These classes hold data about which federates have an
  * interest in them, and what the interest is. That is, rather than storing a separate set of
- * information for each federate, we store sets of information about a particular object/interaction
- * class (inside each is information about any federate).
+ * information for each federate, we store sets of information about a particular
+ * object/interaction class (inside each is information about any federate).
  */
 public class InterestManager implements SaveRestoreTarget
 {
@@ -86,11 +86,11 @@ public class InterestManager implements SaveRestoreTarget
 	//////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * The same as {@link #register(Map, String, int, int, Set, int)} except that it passes
-	 * {@link PorticoConstants#NULL_HANDLE} for the region token and catches/ignores region
-	 * related exceptions. Use this for non-ddm registrations.
+	 * {@link PorticoConstants#NULL_HANDLE} for the region token and catches/ignores region related
+	 * exceptions. Use this for non-ddm registrations.
 	 * 
 	 * @param map        The map of interest data to update (publication or subscription)
-	 * @param action     A tag used in exceptions that describes what the action is attempting 
+	 * @param action     A tag used in exceptions that describes what the action is attempting
 	 * @param federate   The handle of the federate this registration is in reference to
 	 * @param clazz      The handle of the class this registration is for
 	 * @param attributes The set of attributes that are having an interest registered in
@@ -99,10 +99,9 @@ public class InterestManager implements SaveRestoreTarget
 	                       String action,
 	                       int federate,
 	                       int clazz,
-	                       Set<Integer> attributes )
-		throws JObjectClassNotDefined,
-		       JAttributeNotDefined,
-		       JRTIinternalError
+	                       Set<Integer> attributes ) throws JObjectClassNotDefined,
+	                                                 JAttributeNotDefined,
+	                                                 JRTIinternalError
 	{
 		try
 		{
@@ -117,7 +116,7 @@ public class InterestManager implements SaveRestoreTarget
 			// won't happen because we're passing PorticoConstants.NULL_HANDLE
 		}
 	}
-	                       	
+
 	/**
 	 * This method will register an interest (publication or subscription) of an object class for
 	 * the federate identified by the given federate handle. It will run all the appriorate checks
@@ -127,41 +126,41 @@ public class InterestManager implements SaveRestoreTarget
 	 * region token to associate with the unregister. Use it for DDM-related calls.
 	 * 
 	 * @param map            The map of interest data to update (publication or subscription)
-	 * @param action         A tag used in exceptions that describes what the action is attempting 
+	 * @param action         A tag used in exceptions that describes what the action is attempting
 	 * @param federateHandle The handle of the federate this registration is in reference to
 	 * @param classHandle    The handle of the class this registration is for
 	 * @param attributes     The set of attributes that are having an interest registered in
 	 * @param regionToken    Token for the region to associate with the registration. If you don't
-	 *                       want to both with DDM stuff, pass {@link PorticoConstants#NULL_HANDLE}
+	 *                           want to both with DDM stuff, pass
+	 *                           {@link PorticoConstants#NULL_HANDLE}
 	 */
 	private void register( Map<OCMetadata,OCInterest> map,
 	                       String action,
 	                       int federateHandle,
 	                       int classHandle,
 	                       Set<Integer> attributes,
-	                       int regionToken )
-		throws JObjectClassNotDefined,
-		       JAttributeNotDefined,
-		       JRegionNotKnown,
-		       JInvalidRegionContext,
-		       JRTIinternalError
+	                       int regionToken ) throws JObjectClassNotDefined,
+	                                         JAttributeNotDefined,
+	                                         JRegionNotKnown,
+	                                         JInvalidRegionContext,
+	                                         JRTIinternalError
 	{
 		// find the object class
 		OCMetadata objectClass = fom().getObjectClass( classHandle );
 		if( objectClass == null )
 			throw new JObjectClassNotDefined( action + ": class not defined: " + classHandle );
-		
+
 		// find each attribute handle in the class
 		for( int attributeHandle : attributes )
 		{
-			if( objectClass.hasAttribute(attributeHandle) == false )
+			if( objectClass.hasAttribute( attributeHandle ) == false )
 			{
-				throw new JAttributeNotDefined( action +": attribute ["+ attributeHandle +
+				throw new JAttributeNotDefined( action + ": attribute [" + attributeHandle +
 				                                "] not defined in object class [" +
 				                                objectClass.getQualifiedName() + "]" );
 			}
 		}
-		
+
 		////////////////////////////////////////////////////
 		// do all the data distribution management checks //
 		////////////////////////////////////////////////////
@@ -171,20 +170,21 @@ public class InterestManager implements SaveRestoreTarget
 			region = state.getRegionStore().getRegion( regionToken );
 			if( region == null )
 				throw new JRegionNotKnown( "token: " + regionToken );
-			
+
 			for( int attributeHandle : attributes )
 			{
-				ACMetadata attribute = objectClass.getAttribute(attributeHandle);
+				ACMetadata attribute = objectClass.getAttribute( attributeHandle );
 				if( attribute.getSpace() == null ||
-					attribute.getSpace().getHandle() != region.getSpaceHandle() )
+				    attribute.getSpace().getHandle() != region.getSpaceHandle() )
 				{
 					throw new JInvalidRegionContext( "attribute [" + attributeHandle +
-					    "] can't be associated with region [token:" + region.getToken() +
-					    "]: Routing space not associated with attribute in FOM" );
+					                                 "] can't be associated with region [token:" +
+					                                 region.getToken() +
+					                                 "]: Routing space not associated with attribute in FOM" );
 				}
 			}
 		}
-		
+
 		///////////////////////////////////////////////////
 		// record the registration, augment if it exists //
 		///////////////////////////////////////////////////
@@ -197,25 +197,24 @@ public class InterestManager implements SaveRestoreTarget
 
 		interest.registerInterest( federateHandle, attributes, region /*null ok*/ );
 	}
-	
+
 	/**
-	 * This method will unregister any interest the specified federate has in the identified
-	 * object class. If the class doesn't exist in the FOM, or the particular federate didn't have
-	 * an interest in it, an exception will be thrown. This method will throw a
-	 * {@link NoRegistration} if there is no registration. Wrapper methods can extract the message
-	 * and throw an appropriate exception type. 
+	 * This method will unregister any interest the specified federate has in the identified object
+	 * class. If the class doesn't exist in the FOM, or the particular federate didn't have an
+	 * interest in it, an exception will be thrown. This method will throw a {@link NoRegistration}
+	 * if there is no registration. Wrapper methods can extract the message and throw an appropriate
+	 * exception type.
 	 * 
 	 * @param map            The map of interest data to update (publication or subscription)
-	 * @param action         A tag used in exceptions that describes what the action is attempting 
+	 * @param action         A tag used in exceptions that describes what the action is attempting
 	 * @param federateHandle The handle of the federate this unregistration is in reference to
 	 * @param classHandle    The handle of the class this unregistration is for
 	 */
 	private void unregister( Map<OCMetadata,OCInterest> map,
 	                         String action,
 	                         int federateHandle,
-	                         int classHandle )
-		throws JObjectClassNotDefined,
-		       NoRegistration
+	                         int classHandle ) throws JObjectClassNotDefined,
+	                                           NoRegistration
 	{
 		try
 		{
@@ -228,28 +227,28 @@ public class InterestManager implements SaveRestoreTarget
 	}
 
 	/**
-	 * This method will unregister any interest the specified federate has in the identified
-	 * object class. If the class doesn't exist in the FOM, or the particular federate didn't have
-	 * an interest in it, an exception will be thrown. This method will throw a
-	 * {@link NoRegistration} if there is no registration. Wrapper methods can extract the message
-	 * and throw an appropriate exception type. This version of the method accepts a region token
-	 * to associate with the unregister. Use it for DDM-related calls.
+	 * This method will unregister any interest the specified federate has in the identified object
+	 * class. If the class doesn't exist in the FOM, or the particular federate didn't have an
+	 * interest in it, an exception will be thrown. This method will throw a {@link NoRegistration}
+	 * if there is no registration. Wrapper methods can extract the message and throw an appropriate
+	 * exception type. This version of the method accepts a region token to associate with the
+	 * unregister. Use it for DDM-related calls.
 	 * 
 	 * @param map            The map of interest data to update (publication or subscription)
-	 * @param action         A tag used in exceptions that describes what the action is attempting 
+	 * @param action         A tag used in exceptions that describes what the action is attempting
 	 * @param federateHandle The handle of the federate this unregistration is in reference to
 	 * @param classHandle    The handle of the class this unregistration is for
 	 * @param regionToken    Token for the region to associate with the registration. If you don't
-	 *                       want to both with DDM stuff, pass {@link PorticoConstants#NULL_HANDLE}
+	 *                           want to both with DDM stuff, pass
+	 *                           {@link PorticoConstants#NULL_HANDLE}
 	 */
 	private void unregister( Map<OCMetadata,OCInterest> map,
 	                         String action,
 	                         int federateHandle,
 	                         int classHandle,
-	                         int regionToken )
-		throws JObjectClassNotDefined,
-		       JRegionNotKnown,
-		       NoRegistration
+	                         int regionToken ) throws JObjectClassNotDefined,
+	                                           JRegionNotKnown,
+	                                           NoRegistration
 	{
 		// validate the region if applicable
 		RegionInstance region = null;
@@ -265,24 +264,24 @@ public class InterestManager implements SaveRestoreTarget
 		OCMetadata objectClass = fom().getObjectClass( classHandle );
 		if( objectClass == null )
 			throw new JObjectClassNotDefined( action + ": class not defined: " + classHandle );
-		
+
 		OCInterest interest = map.get( objectClass );
 		if( interest == null )
-			throw new NoRegistration( action+": federate has no pub/sub interest in "+classHandle );
-		
+			throw new NoRegistration( action + ": federate has no pub/sub interest in " +
+			                          classHandle );
+
 		interest.removeInterest( federateHandle, region );
 	}
 
 	/**
 	 * This method will unregister any interest the associated fedeate has in the specified
-	 * attributes of the given class. If other attributes in the class were also registered,
-	 * that registration will still remain after this caall. If the given set of attribute
-	 * handles is either <code>null</code> or empty, the entire interest (*ALL* attributes)
-	 * will be removed. If the object class cannot be found, or the record doesn't exist, an
-	 * exception will be thrown.
+	 * attributes of the given class. If other attributes in the class were also registered, that
+	 * registration will still remain after this caall. If the given set of attribute handles is
+	 * either <code>null</code> or empty, the entire interest (*ALL* attributes) will be removed. If
+	 * the object class cannot be found, or the record doesn't exist, an exception will be thrown.
 	 * 
 	 * @param map         The map of interest data to update (publication or subscription)
-	 * @param action      A tag used in exceptions that describes what the action is attempting 
+	 * @param action      A tag used in exceptions that describes what the action is attempting
 	 * @param federate    The handle of the federate this unregistration is in reference to
 	 * @param classHandle The handle of the class this unregistration is for
 	 * @param attributes  The set of attributes that are having an interest registered in
@@ -291,47 +290,47 @@ public class InterestManager implements SaveRestoreTarget
 	                         String action,
 	                         int federate,
 	                         int classHandle,
-	                         Set<Integer> attributes )
-		throws JObjectClassNotDefined,
-		       NoRegistration
+	                         Set<Integer> attributes ) throws JObjectClassNotDefined,
+	                                                   NoRegistration
 	{
 		try
 		{
-			unregister( map, action, federate, classHandle, attributes, PorticoConstants.NULL_HANDLE );
+			unregister( map, action, federate, classHandle, attributes,
+			            PorticoConstants.NULL_HANDLE );
 		}
 		catch( JRegionNotKnown rnk )
 		{
 			// won't happen because we're passing PorticoConstants.NULL_HANDLE
 		}
 	}
-	
+
 
 	/**
 	 * This method will unregister any interest the associated fedeate has in the specified
-	 * attributes of the given class. If other attributes in the class were also registered,
-	 * that registration will still remain after this caall. If the given set of attribute
-	 * handles is either <code>null</code> or empty, the entire interest (*ALL* attributes)
-	 * will be removed. If the object class cannot be found, or the record doesn't exist, an
-	 * exception will be thrown. This version of the method accepts a region token to associate
-	 * with the unregister. Use it for DDM-related calls.
+	 * attributes of the given class. If other attributes in the class were also registered, that
+	 * registration will still remain after this caall. If the given set of attribute handles is
+	 * either <code>null</code> or empty, the entire interest (*ALL* attributes) will be removed. If
+	 * the object class cannot be found, or the record doesn't exist, an exception will be thrown.
+	 * This version of the method accepts a region token to associate with the unregister. Use it
+	 * for DDM-related calls.
 	 * 
 	 * @param map            The map of interest data to update (publication or subscription)
-	 * @param action         A tag used in exceptions that describes what the action is attempting 
+	 * @param action         A tag used in exceptions that describes what the action is attempting
 	 * @param federateHandle The handle of the federate this unregistration is in reference to
 	 * @param classHandle    The handle of the class this unregistration is for
 	 * @param attributes     The set of attributes that are having an interest registered in
 	 * @param regionToken    Token for the region to associate with the registration. If you don't
-	 *                       want to both with DDM stuff, pass {@link PorticoConstants#NULL_HANDLE}
+	 *                           want to both with DDM stuff, pass
+	 *                           {@link PorticoConstants#NULL_HANDLE}
 	 */
 	private void unregister( Map<OCMetadata,OCInterest> map,
 	                         String action,
 	                         int federateHandle,
 	                         int classHandle,
 	                         Set<Integer> attributes,
-	                         int regionToken )
-		throws JObjectClassNotDefined,
-		       JRegionNotKnown,
-		       NoRegistration
+	                         int regionToken ) throws JObjectClassNotDefined,
+	                                           JRegionNotKnown,
+	                                           NoRegistration
 	{
 		// validate the region if applicable
 		RegionInstance region = null;
@@ -340,7 +339,7 @@ public class InterestManager implements SaveRestoreTarget
 			region = state.getRegionStore().getRegion( regionToken );
 			if( region == null )
 				throw new JRegionNotKnown( "token: " + regionToken );
-			
+
 			// FIXME Add support for region handling and attribute sets
 			throw new RuntimeException( "not yet supported" );
 		}
@@ -349,15 +348,16 @@ public class InterestManager implements SaveRestoreTarget
 		// OCInterest and remove the federate as a recorded interest
 		OCMetadata objectClass = fom().getObjectClass( classHandle );
 		if( objectClass == null )
-			throw new JObjectClassNotDefined( action+": class not defined: "+classHandle );
-		
+			throw new JObjectClassNotDefined( action + ": class not defined: " + classHandle );
+
 		OCInterest interest = map.get( objectClass );
 		if( interest == null )
-			throw new NoRegistration( action+": federate has no pub/sub interest in "+classHandle );
-		
+			throw new NoRegistration( action + ": federate has no pub/sub interest in " +
+			                          classHandle );
+
 		interest.removeInterest( federateHandle, attributes );
 	}
-	
+
 	/**
 	 * Get all the attributes that are currently registered by the identified federate handle. If
 	 * the class isn't registered by the federate, a {@link NoRegistration} is thrown.
@@ -365,22 +365,25 @@ public class InterestManager implements SaveRestoreTarget
 	private Set<Integer> getRegisteredAttributes( Map<OCMetadata,OCInterest> map,
 	                                              String action,
 	                                              int federateHandle,
-	                                              int classHandle )
-		throws JObjectClassNotDefined, NoRegistration
+	                                              int classHandle ) throws JObjectClassNotDefined,
+	                                                                NoRegistration
 	{
 		// find the metadata for the object class so that we can locate the appropriate
 		// OCInterest and get all the registered attributes
 		OCMetadata objectClass = fom().getObjectClass( classHandle );
 		if( objectClass == null )
-			throw new JObjectClassNotDefined( action+": object class not defined: "+classHandle );
-		
+			throw new JObjectClassNotDefined( action + ": object class not defined: " +
+			                                  classHandle );
+
 		OCInterest interest = map.get( objectClass );
 		if( interest == null )
-			throw new NoRegistration( action+": federate has no pub/sub interest in "+classHandle );
-		
+			throw new NoRegistration( action + ": federate has no pub/sub interest in " +
+			                          classHandle );
+
 		Set<Integer> registered = interest.getInterest( federateHandle );
 		if( registered == null )
-			throw new NoRegistration( action+": federate has no pub/sub interest in "+classHandle );
+			throw new NoRegistration( action + ": federate has no pub/sub interest in " +
+			                          classHandle );
 		else
 			return interest.getInterest( federateHandle );
 	}
@@ -394,7 +397,7 @@ public class InterestManager implements SaveRestoreTarget
 	                                         int classHandle )
 	{
 		// get the metadata for the object class so we can locate the interest
-		OCInterest interest = map.get( fom().getObjectClass(classHandle) );
+		OCInterest interest = map.get( fom().getObjectClass( classHandle ) );
 		if( interest == null )
 			return false;
 		else
@@ -403,8 +406,8 @@ public class InterestManager implements SaveRestoreTarget
 
 	/**
 	 * Returns <code>true</code> if the federate has a registered interest in the identified
-	 * attribute class. If the object or attribute classes can't be found, or the attribute
-	 * isn't registered, <code>false</code> is returned.
+	 * attribute class. If the object or attribute classes can't be found, or the attribute isn't
+	 * registered, <code>false</code> is returned.
 	 */
 	private boolean isAttributeClassRegistered( Map<OCMetadata,OCInterest> map,
 	                                            int federateHandle,
@@ -412,7 +415,7 @@ public class InterestManager implements SaveRestoreTarget
 	                                            int attributeHandle )
 	{
 		// get the metadata for the object class so we can locate the interest
-		OCInterest interest = map.get( fom().getObjectClass(classHandle) );
+		OCInterest interest = map.get( fom().getObjectClass( classHandle ) );
 		if( interest == null )
 			return false;
 		else
@@ -424,20 +427,19 @@ public class InterestManager implements SaveRestoreTarget
 	//////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * The same as {@link #register(Map, String, int, int, int)} except that it passes
-	 * {@link PorticoConstants#NULL_HANDLE} for the region token and catches/ignores region
-	 * related exceptions. Use this for non-ddm registrations.
+	 * {@link PorticoConstants#NULL_HANDLE} for the region token and catches/ignores region related
+	 * exceptions. Use this for non-ddm registrations.
 	 * 
 	 * @param map            The map of interest data to update (publication or subscription)
-	 * @param action         A tag used in exceptions that describes what the action is attempting 
+	 * @param action         A tag used in exceptions that describes what the action is attempting
 	 * @param federateHandle The handle of the federate this registration is in reference to
 	 * @param classHandle    The handle of the class this registration is for
 	 */
 	private void register( Map<ICMetadata,ICInterest> map,
 	                       String action,
 	                       int federateHandle,
-	                       int classHandle )
-		throws JInteractionClassNotDefined,
-		       JRTIinternalError
+	                       int classHandle ) throws JInteractionClassNotDefined,
+	                                         JRTIinternalError
 	{
 		try
 		{
@@ -452,7 +454,7 @@ public class InterestManager implements SaveRestoreTarget
 			// won't happen because we're passing PorticoConstants.NULL_HANDLE
 		}
 	}
-	
+
 	/**
 	 * Registers a publication or subscription interest in a particular interaction class for the
 	 * identified federate. Whether the interest is a pub or sub one depends on the map that is
@@ -463,21 +465,21 @@ public class InterestManager implements SaveRestoreTarget
 	 * DDM-related methods, you can pass {@link PorticoConstants#NULL_HANDLE} for the regionToken.
 	 * 
 	 * @param map            The map of interest data to update (publication or subscription)
-	 * @param action         A tag used in exceptions that describes what the action is attempting 
+	 * @param action         A tag used in exceptions that describes what the action is attempting
 	 * @param federateHandle The handle of the federate this registration is in reference to
 	 * @param classHandle    The handle of the class this registration is for
 	 * @param regionToken    Token for the region to associate with the registration. If you don't
-	 *                       want to both with DDM stuff, pass {@link PorticoConstants#NULL_HANDLE}
+	 *                           want to both with DDM stuff, pass
+	 *                           {@link PorticoConstants#NULL_HANDLE}
 	 */
 	private void register( Map<ICMetadata,ICInterest> map,
 	                       String action,
 	                       int federateHandle,
 	                       int classHandle,
-	                       int regionToken )
-		throws JInteractionClassNotDefined,
-		       JRegionNotKnown,
-		       JInvalidRegionContext,
-		       JRTIinternalError
+	                       int regionToken ) throws JInteractionClassNotDefined,
+	                                         JRegionNotKnown,
+	                                         JInvalidRegionContext,
+	                                         JRTIinternalError
 	{
 		// find the interaction class
 		ICMetadata interactionClass = fom().getInteractionClass( classHandle );
@@ -491,13 +493,13 @@ public class InterestManager implements SaveRestoreTarget
 			region = state.getRegionStore().getRegionCreatedBy( regionToken, federateHandle );
 			if( region == null )
 				throw new JRegionNotKnown( "token: " + regionToken );
-			
+
 			// check that the FOM allows regions of this space to link with this interaction class
 			if( interactionClass.getSpace() == null ||
-				interactionClass.getSpace().getHandle() != region.getSpaceHandle() )
+			    interactionClass.getSpace().getHandle() != region.getSpaceHandle() )
 			{
 				throw new JInvalidRegionContext( "The routing space for the region is different" +
-				    " from the routing space associated with the interaction class in the FOM" );
+				                                 " from the routing space associated with the interaction class in the FOM" );
 			}
 		}
 
@@ -508,29 +510,25 @@ public class InterestManager implements SaveRestoreTarget
 			interest = new ICInterest( interactionClass );
 			map.put( interactionClass, interest );
 		}
-		
+
 		interest.registerInterest( federateHandle, region );
 	}
-	
+
 	/**
 	 * The reverse of {@link #register(Map, String, int, int)}. Removes the publication or
-	 * subscription interest in the class for the identified federate. If the class doesn't exist
-	 * in the FOM, or the federate wasn't registered as having the interest, an exception will be
+	 * subscription interest in the class for the identified federate. If the class doesn't exist in
+	 * the FOM, or the federate wasn't registered as having the interest, an exception will be
 	 * thrown.
 	 */
 	private void unregisterInteraction( Map<ICMetadata,ICInterest> map,
 	                                    String action,
 	                                    int federateHandle,
-	                                    int classHandle )
-		throws JInteractionClassNotDefined,
-		       NoRegistration
+	                                    int classHandle ) throws JInteractionClassNotDefined,
+	                                                      NoRegistration
 	{
 		try
 		{
-			unregisterInteraction( map,
-			                       action,
-			                       federateHandle,
-			                       classHandle,
+			unregisterInteraction( map, action, federateHandle, classHandle,
 			                       PorticoConstants.NULL_HANDLE );
 		}
 		catch( JRegionNotKnown rnk )
@@ -541,27 +539,27 @@ public class InterestManager implements SaveRestoreTarget
 
 	/**
 	 * The reverse of {@link #register(Map, String, int, int)}. Removes the publication or
-	 * subscription interest in the class for the identified federate. If the class doesn't exist
-	 * in the FOM, or the federate wasn't registered as having the interest, an exception will be
-	 * thrown.
-	 * This method takes into account region data when making the registration. If you don't want
-	 * DDM-related methods, you can pass {@link PorticoConstants#NULL_HANDLE} for the regionToken.
+	 * subscription interest in the class for the identified federate. If the class doesn't exist in
+	 * the FOM, or the federate wasn't registered as having the interest, an exception will be
+	 * thrown. This method takes into account region data when making the registration. If you don't
+	 * want DDM-related methods, you can pass {@link PorticoConstants#NULL_HANDLE} for the
+	 * regionToken.
 	 * 
 	 * @param map            The map of interest data to update (publication or subscription)
-	 * @param action         A tag used in exceptions that describes what the action is attempting 
+	 * @param action         A tag used in exceptions that describes what the action is attempting
 	 * @param federateHandle The handle of the federate this registration is in reference to
 	 * @param classHandle    The handle of the class this registration is for
 	 * @param regionToken    Token for the region to associate with the registration. If you don't
-	 *                       want to both with DDM stuff, pass {@link PorticoConstants#NULL_HANDLE}.
+	 *                           want to both with DDM stuff, pass
+	 *                           {@link PorticoConstants#NULL_HANDLE}.
 	 */
 	private void unregisterInteraction( Map<ICMetadata,ICInterest> map,
 	                                    String action,
 	                                    int federateHandle,
 	                                    int classHandle,
-	                                    int regionToken )
-		throws JInteractionClassNotDefined,
-		       JRegionNotKnown,
-		       NoRegistration
+	                                    int regionToken ) throws JInteractionClassNotDefined,
+	                                                      JRegionNotKnown,
+	                                                      NoRegistration
 	{
 		// validate region information if applicable
 		RegionInstance region = null;
@@ -571,22 +569,23 @@ public class InterestManager implements SaveRestoreTarget
 			if( region == null )
 				throw new JRegionNotKnown( "token: " + regionToken );
 		}
-		
+
 		// find the metadata for the interaction class so that we can locate the appropriate
 		// ICInterest and remove the federate as a recorded interest
 		ICMetadata interactionClass = fom().getInteractionClass( classHandle );
 		if( interactionClass == null )
 			throw new JInteractionClassNotDefined( action + ": class not defined: " + classHandle );
-		
+
 		ICInterest interest = map.get( interactionClass );
 		if( interest == null )
-			throw new NoRegistration( action+": federate has no pub/sub interest in "+classHandle );
-		
+			throw new NoRegistration( action + ": federate has no pub/sub interest in " +
+			                          classHandle );
+
 		// null will be passed for the region if no region data was provided, this is equivalent
 		// to passing the default region causing region considerations to be ignored
 		interest.removeInterest( federateHandle, region );
 	}
-	
+
 	/**
 	 * This method will check to see if the identified federate has registered an interest in the
 	 * given interaction class.
@@ -596,7 +595,7 @@ public class InterestManager implements SaveRestoreTarget
 	                                              int classHandle )
 	{
 		// get the metadata for the object class so we can locate the interest
-		ICInterest interest = map.get( fom().getInteractionClass(classHandle) );
+		ICInterest interest = map.get( fom().getInteractionClass( classHandle ) );
 		if( interest == null )
 			return false;
 		else
@@ -607,15 +606,16 @@ public class InterestManager implements SaveRestoreTarget
 	/////////////////////////////// Object Publication Methods ///////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////
 	/**
-	 * This method will record the publication of an object class for the federate identified
-	 * by the given federate handle. It will run all the appriorate checks on the given information
-	 * to validate that the handles exist in the model and are appropriate (make sure the attributes
+	 * This method will record the publication of an object class for the federate identified by the
+	 * given federate handle. It will run all the appriorate checks on the given information to
+	 * validate that the handles exist in the model and are appropriate (make sure the attributes
 	 * are of the right object class etc...)
 	 */
-	public void publishObjectClass( int federateHandle, int classHandle, Set<Integer> attributes )
-		throws JObjectClassNotDefined,
-		       JAttributeNotDefined,
-		       JRTIinternalError
+	public void publishObjectClass( int federateHandle,
+	                                int classHandle,
+	                                Set<Integer> attributes ) throws JObjectClassNotDefined,
+	                                                          JAttributeNotDefined,
+	                                                          JRTIinternalError
 	{
 		// Profile profile = getFederateProfile(federateHandle);
 		// if (profile == null || !profile.hasAccess("topic_name", "pb")) {
@@ -626,13 +626,12 @@ public class InterestManager implements SaveRestoreTarget
 
 	/**
 	 * This method will remove any object publication record the specified federate had in the
-	 * object class identified by the given handle. If the class doesn't exist in the FOM, or
-	 * the particular federate didn't have a publication interest in it, an exception will be
-	 * thrown.
+	 * object class identified by the given handle. If the class doesn't exist in the FOM, or the
+	 * particular federate didn't have a publication interest in it, an exception will be thrown.
 	 */
-	public void unpublishObjectClass( int federateHandle, int classHandle )
-		throws JObjectClassNotDefined,
-		       JObjectClassNotPublished
+	public void unpublishObjectClass( int federateHandle,
+	                                  int classHandle ) throws JObjectClassNotDefined,
+	                                                    JObjectClassNotPublished
 	{
 		try
 		{
@@ -643,18 +642,19 @@ public class InterestManager implements SaveRestoreTarget
 			throw new JObjectClassNotPublished( nr.getMessage() );
 		}
 	}
-	
+
 	/**
-	 * This method will remove the publication record associated with the identified federate in
-	 * the given attributes of the given class. If other attributes in the class were also
-	 * published, their record will remain after this call. If the given set is either empty or
+	 * This method will remove the publication record associated with the identified federate in the
+	 * given attributes of the given class. If other attributes in the class were also published,
+	 * their record will remain after this call. If the given set is either empty or
 	 * <code>null</code>, then the entire publication (for *ALL* attributes of the class) will be
 	 * removed. If the object class cannot be found, or a publication record didn't exist, an
 	 * exception will be thrown.
 	 */
-	public void unpublishObjectClass( int federateHandle, int classHandle, Set<Integer> attributes )
-		throws JObjectClassNotDefined,
-		       JObjectClassNotPublished
+	public void unpublishObjectClass( int federateHandle,
+	                                  int classHandle,
+	                                  Set<Integer> attributes ) throws JObjectClassNotDefined,
+	                                                            JObjectClassNotPublished
 	{
 		try
 		{
@@ -665,17 +665,19 @@ public class InterestManager implements SaveRestoreTarget
 			throw new JObjectClassNotPublished( nr.getMessage() );
 		}
 	}
-	
+
 	/**
-	 * Get all the attributes that are currently published by the identified federate handle. If
-	 * the class isn't published by the federate, an exception is thrown.
+	 * Get all the attributes that are currently published by the identified federate handle. If the
+	 * class isn't published by the federate, an exception is thrown.
 	 */
-	public Set<Integer> getPublishedAttributes( int federateHandle, int classHandle )
-		throws JObjectClassNotDefined, JObjectClassNotPublished
+	public Set<Integer> getPublishedAttributes( int federateHandle,
+	                                            int classHandle ) throws JObjectClassNotDefined,
+	                                                              JObjectClassNotPublished
 	{
 		try
 		{
-			return getRegisteredAttributes( pObjects, "PUBLISH-OBJECT", federateHandle, classHandle );
+			return getRegisteredAttributes( pObjects, "PUBLISH-OBJECT", federateHandle,
+			                                classHandle );
 		}
 		catch( NoRegistration nr )
 		{
@@ -708,11 +710,14 @@ public class InterestManager implements SaveRestoreTarget
 	//////////////////////////////////////////////////////////////////////////////////////////
 	/**
 	 * This method will record the subscription to a particular set of attribute for an identified
-	 * federate. Checks to validate that each of the attribute exists in the object class exist
-	 * will be run, with exceptions being thrown for transgressions.
+	 * federate. Checks to validate that each of the attribute exists in the object class exist will
+	 * be run, with exceptions being thrown for transgressions.
 	 */
-	public void subscribeObjectClass( int federateHandle, int classHandle, Set<Integer> attributes )
-		throws JObjectClassNotDefined, JAttributeNotDefined, JRTIinternalError
+	public void subscribeObjectClass( int federateHandle,
+	                                  int classHandle,
+	                                  Set<Integer> attributes ) throws JObjectClassNotDefined,
+	                                                            JAttributeNotDefined,
+	                                                            JRTIinternalError
 	{
 		register( sObjects, "SUBSCRIBE-OBJECT", federateHandle, classHandle, attributes );
 	}
@@ -727,31 +732,25 @@ public class InterestManager implements SaveRestoreTarget
 	public void subscribeObjectClass( int federateHandle,
 	                                  int classHandle,
 	                                  Set<Integer> attributes,
-	                                  int regionToken )
-		throws JObjectClassNotDefined,
-		       JAttributeNotDefined,
-		       JRegionNotKnown,
-		       JInvalidRegionContext,
-		       JRTIinternalError
+	                                  int regionToken ) throws JObjectClassNotDefined,
+	                                                    JAttributeNotDefined,
+	                                                    JRegionNotKnown,
+	                                                    JInvalidRegionContext,
+	                                                    JRTIinternalError
 	{
-		register( sObjects,
-		          "SUBSCRIBE-OBJECT-DDM",
-		          federateHandle,
-		          classHandle,
-		          attributes,
+		register( sObjects, "SUBSCRIBE-OBJECT-DDM", federateHandle, classHandle, attributes,
 		          regionToken );
 		return;
 	}
-	
+
 	/**
 	 * This method will remove any object subscription record the specified federate had in the
-	 * object class identified by the given handle. If the class doesn't exist in the FOM, or
-	 * the particular federate didn't have a publication interest in it, an exception will be
-	 * thrown.
+	 * object class identified by the given handle. If the class doesn't exist in the FOM, or the
+	 * particular federate didn't have a publication interest in it, an exception will be thrown.
 	 */
-	public void unsubscribeObjectClass( int federateHandle, int classHandle )
-		throws JObjectClassNotDefined,
-		       JObjectClassNotSubscribed
+	public void unsubscribeObjectClass( int federateHandle,
+	                                    int classHandle ) throws JObjectClassNotDefined,
+	                                                      JObjectClassNotSubscribed
 	{
 		try
 		{
@@ -765,16 +764,17 @@ public class InterestManager implements SaveRestoreTarget
 
 	/**
 	 * This method will remove any object subscription record the specified federate had in the
-	 * object class identified by the given handle. If the class doesn't exist in the FOM, or
-	 * the particular federate didn't have a publication interest in it, an exception will be
-	 * thrown.  Checks will also be made to ensure that the specified region exists and is of a
-	 * routing space that the FOM defines as valid for each attribute.
+	 * object class identified by the given handle. If the class doesn't exist in the FOM, or the
+	 * particular federate didn't have a publication interest in it, an exception will be thrown.
+	 * Checks will also be made to ensure that the specified region exists and is of a routing space
+	 * that the FOM defines as valid for each attribute.
 	 */
-	public void unsubscribeObjectClass( int federateHandle, int classHandle, int regionToken )
-		throws JObjectClassNotDefined,
-		       JObjectClassNotSubscribed,
-		       JRegionNotKnown,
-		       JInvalidRegionContext
+	public void unsubscribeObjectClass( int federateHandle,
+	                                    int classHandle,
+	                                    int regionToken ) throws JObjectClassNotDefined,
+	                                                      JObjectClassNotSubscribed,
+	                                                      JRegionNotKnown,
+	                                                      JInvalidRegionContext
 	{
 		try
 		{
@@ -785,7 +785,7 @@ public class InterestManager implements SaveRestoreTarget
 			throw new JObjectClassNotSubscribed( nr.getMessage() );
 		}
 	}
-	
+
 	/**
 	 * This method will remove the subscription record associated with the identified federate in
 	 * the given attributes of the given class. If other attributes in the class were also
@@ -796,9 +796,8 @@ public class InterestManager implements SaveRestoreTarget
 	 */
 	public void unsubscribeObjectClass( int federateHandle,
 	                                    int classHandle,
-	                                    Set<Integer> attributes )
-		throws JObjectClassNotDefined,
-		       JObjectClassNotSubscribed
+	                                    Set<Integer> attributes ) throws JObjectClassNotDefined,
+	                                                              JObjectClassNotSubscribed
 	{
 		try
 		{
@@ -811,34 +810,35 @@ public class InterestManager implements SaveRestoreTarget
 	}
 
 	/**
-	 * Get all the attributes that are currently subscribe by the identified federate handle for
-	 * the given class. If the class isn't published by the federate, an exception is thrown.
+	 * Get all the attributes that are currently subscribe by the identified federate handle for the
+	 * given class. If the class isn't published by the federate, an exception is thrown.
 	 */
-	public Set<Integer> getSubscribedAttributes( int federateHandle, int classHandle )
-		throws JObjectClassNotDefined,
-		       JObjectClassNotSubscribed
+	public Set<Integer> getSubscribedAttributes( int federateHandle,
+	                                             int classHandle ) throws JObjectClassNotDefined,
+	                                                               JObjectClassNotSubscribed
 	{
 		try
 		{
-			return getRegisteredAttributes( sObjects, "SUBSCRIBE-OBJECT", federateHandle, classHandle );
+			return getRegisteredAttributes( sObjects, "SUBSCRIBE-OBJECT", federateHandle,
+			                                classHandle );
 		}
 		catch( NoRegistration nr )
 		{
 			throw new JObjectClassNotSubscribed( nr.getMessage() );
 		}
 	}
-	
+
 	/**
 	 * Get the {@link OCInterest} the given federate has in the given object class. If the federate
 	 * isn't subscribed, an exception will be thrown, otherwise the interest object will be returned
 	 */
-	public OCInterest getSubscribedInterest( int federateHandle, OCMetadata objectClass )
-		throws JObjectClassNotSubscribed
+	public OCInterest getSubscribedInterest( int federateHandle,
+	                                         OCMetadata objectClass ) throws JObjectClassNotSubscribed
 	{
 		OCInterest interest = sObjects.get( objectClass );
 		if( interest == null )
-			throw new JObjectClassNotSubscribed( "federate has no interest in "+objectClass );
-		
+			throw new JObjectClassNotSubscribed( "federate has no interest in " + objectClass );
+
 		return interest;
 	}
 
@@ -857,7 +857,7 @@ public class InterestManager implements SaveRestoreTarget
 	 * will be returned.
 	 * 
 	 * @param federateHandle The handle of the federate we are searching for a subscription for
-	 * @param initialClass The handle of the class to start looking for subscription data with
+	 * @param initialClass   The handle of the class to start looking for subscription data with
 	 * @return The OCMetadata of the most specific object class that the federate is subscribed to
 	 *         or null if discovery is not possible with the current subscription interest
 	 */
@@ -867,13 +867,13 @@ public class InterestManager implements SaveRestoreTarget
 		OCMetadata clazz = fom().getObjectClass( initialClass );
 		if( clazz == null )
 			return null; // don't know what the initial class is :S
-		
+
 		// check to see if the class is subscribed, if it isn't, move on to its parent and check.
 		// keep doing this until we find the first class that is subscribed (and return it) or
 		// until we run out of parents to check
 		while( true )
 		{
-			if( isObjectClassSubscribedDirectly(federateHandle,clazz.getHandle()) )
+			if( isObjectClassSubscribedDirectly( federateHandle, clazz.getHandle() ) )
 			{
 				return clazz;
 			}
@@ -885,7 +885,7 @@ public class InterestManager implements SaveRestoreTarget
 			}
 		}
 	}
-	
+
 	/**
 	 * This method will check to see if the identified federate subscribes to the object class. If
 	 * the exact class isn't subscribed, the method will check up the inheritence hierarchy to see
@@ -899,15 +899,15 @@ public class InterestManager implements SaveRestoreTarget
 		OCMetadata clazz = fom().getObjectClass( initialClass );
 		if( clazz == null )
 			return false;
-		
+
 		while( clazz != null )
 		{
-			if( isObjectClassSubscribedDirectly( federateHandle, clazz.getHandle()) )
+			if( isObjectClassSubscribedDirectly( federateHandle, clazz.getHandle() ) )
 				return true;
 			else
 				clazz = clazz.getParent();
 		}
-		
+
 		return false;
 	}
 
@@ -915,7 +915,7 @@ public class InterestManager implements SaveRestoreTarget
 	 * The same as {@link #isObjectClassSubscribed(int, int)} except that it <b>DOES NOT</b> take
 	 * inheritance into account when making its decision.
 	 * 
-	 * @return <code>true</code> if the identified federate published the given class handle, 
+	 * @return <code>true</code> if the identified federate published the given class handle,
 	 *         <code>false</code> otherwise.
 	 */
 	public boolean isObjectClassSubscribedDirectly( int federateHandle, int classHandle )
@@ -943,28 +943,26 @@ public class InterestManager implements SaveRestoreTarget
 	 * federate. It will also validate that the interaction class exists in the FOM and will throw
 	 * an exception if it isn't.
 	 */
-	public void publishInteractionClass( int federateHandle, int classHandle )
-		throws JInteractionClassNotDefined,
-		       JRTIinternalError
+	public void publishInteractionClass( int federateHandle,
+	                                     int classHandle ) throws JInteractionClassNotDefined,
+	                                                       JRTIinternalError
 	{
 		register( pInteractions, "PUBLISH-INTERACTION", federateHandle, classHandle );
 	}
-	
+
 	/**
 	 * This method will remove any interaction publication record the specified federate had in the
 	 * interaction class identified by the given handle. If the class doesn't exist in the FOM, or
 	 * the particular federate didn't have a publication interest in it, an exception will be
 	 * thrown.
 	 */
-	public void unpublishInteractionClass( int federateHandle, int classHandle )
-		throws JInteractionClassNotDefined,
-		       JInteractionClassNotPublished
+	public void unpublishInteractionClass( int federateHandle,
+	                                       int classHandle ) throws JInteractionClassNotDefined,
+	                                                         JInteractionClassNotPublished
 	{
 		try
 		{
-			unregisterInteraction( pInteractions,
-			                       "UNPUBLISH-INTERACTION",
-			                       federateHandle,
+			unregisterInteraction( pInteractions, "UNPUBLISH-INTERACTION", federateHandle,
 			                       classHandle );
 		}
 		catch( NoRegistration nr )
@@ -972,7 +970,7 @@ public class InterestManager implements SaveRestoreTarget
 			throw new JInteractionClassNotPublished( nr.getMessage() );
 		}
 	}
-	
+
 	/**
 	 * This method will check to see if the identified federate publishes the interaction class.
 	 */
@@ -989,30 +987,28 @@ public class InterestManager implements SaveRestoreTarget
 	 * federate. It will also validate that the interaction class exists in the FOM and will throw
 	 * an exception if it isn't.
 	 */
-	public void subscribeInteractionClass( int federateHandle, int classHandle )
-		throws JInteractionClassNotDefined,
-		       JRTIinternalError
+	public void subscribeInteractionClass( int federateHandle,
+	                                       int classHandle ) throws JInteractionClassNotDefined,
+	                                                         JRTIinternalError
 	{
 		register( sInteractions, "SUBSCRIBE-INTERACTION", federateHandle, classHandle );
 	}
-	
+
 	/**
 	 * This method will record the subscription to the identified interaction class for the given
 	 * federate. It will also validate that the interaction class exists in the FOM and will throw
 	 * an exception if it isn't. If the given <code>regionToken</code> doesn't identify a known
 	 * region, or the region's routing space isn't declared in the FOM for the interaction class,
-	 * exceptions are thrown. 
+	 * exceptions are thrown.
 	 */
-	public void subscribeInteractionClass( int federateHandle, int classHandle, int regionToken )
-		throws JInteractionClassNotDefined,
-		       JRegionNotKnown,
-		       JInvalidRegionContext,
-		       JRTIinternalError
+	public void subscribeInteractionClass( int federateHandle,
+	                                       int classHandle,
+	                                       int regionToken ) throws JInteractionClassNotDefined,
+	                                                         JRegionNotKnown,
+	                                                         JInvalidRegionContext,
+	                                                         JRTIinternalError
 	{
-		register( sInteractions,
-		          "SUBSCRIBE-INTERACTION-DDM",
-		          federateHandle,
-		          classHandle,
+		register( sInteractions, "SUBSCRIBE-INTERACTION-DDM", federateHandle, classHandle,
 		          regionToken );
 	}
 
@@ -1022,15 +1018,13 @@ public class InterestManager implements SaveRestoreTarget
 	 * the particular federate didn't have a subscription interest in it, an exception will be
 	 * thrown.
 	 */
-	public void unsubscribeInteractionClass( int federateHandle, int classHandle )
-		throws JInteractionClassNotDefined,
-		       JInteractionClassNotSubscribed
+	public void unsubscribeInteractionClass( int federateHandle,
+	                                         int classHandle ) throws JInteractionClassNotDefined,
+	                                                           JInteractionClassNotSubscribed
 	{
 		try
 		{
-			unregisterInteraction( sInteractions,
-			                       "UNSUBSCRIBE-INTERACTION",
-			                       federateHandle,
+			unregisterInteraction( sInteractions, "UNSUBSCRIBE-INTERACTION", federateHandle,
 			                       classHandle );
 		}
 		catch( NoRegistration nr )
@@ -1038,7 +1032,7 @@ public class InterestManager implements SaveRestoreTarget
 			throw new JInteractionClassNotSubscribed( nr.getMessage() );
 		}
 	}
-	
+
 	/**
 	 * This method will remove any interaction subscription record the specified federate had in the
 	 * interaction class identified by the given handle. If the class doesn't exist in the FOM, or
@@ -1047,18 +1041,16 @@ public class InterestManager implements SaveRestoreTarget
 	 * region's routing space isn't declared in the FOM for the interaction class, exceptions are
 	 * thrown.
 	 */
-	public void unsubscribeInteractionClass( int federateHandle, int classHandle, int regionToken )
-		throws JInteractionClassNotDefined,
-		       JInteractionClassNotSubscribed,
-		       JRegionNotKnown
+	public void unsubscribeInteractionClass( int federateHandle,
+	                                         int classHandle,
+	                                         int regionToken ) throws JInteractionClassNotDefined,
+	                                                           JInteractionClassNotSubscribed,
+	                                                           JRegionNotKnown
 	{
 		try
 		{
-			unregisterInteraction( sInteractions,
-			                       "UNSUBSCRIBE-INTERACTION",
-			                       federateHandle,
-			                       classHandle,
-			                       regionToken );
+			unregisterInteraction( sInteractions, "UNSUBSCRIBE-INTERACTION", federateHandle,
+			                       classHandle, regionToken );
 		}
 		catch( NoRegistration nr )
 		{
@@ -1074,28 +1066,28 @@ public class InterestManager implements SaveRestoreTarget
 		ICMetadata clazz = fom().getInteractionClass( initialClass );
 		if( clazz == null )
 			return false;
-		
+
 		while( clazz != null )
 		{
-			if( isInteractionClassSubscribedDirectly(federateHandle, clazz.getHandle()) )
+			if( isInteractionClassSubscribedDirectly( federateHandle, clazz.getHandle() ) )
 				return true;
 			else
 				clazz = clazz.getParent();
 		}
-		
+
 		return false;
 	}
-	
+
 	/**
 	 * Returns <code>true</code> if the identified federate is subscribed directly to the given
-	 * interaction class. This method will *NOT* check the inheritance hierarchy, it will only
-	 * check for direct subscriptions.
+	 * interaction class. This method will *NOT* check the inheritance hierarchy, it will only check
+	 * for direct subscriptions.
 	 */
 	public boolean isInteractionClassSubscribedDirectly( int federateHandle, int classHandle )
 	{
 		return isInteractionClassRegistered( sInteractions, federateHandle, classHandle );
 	}
-	
+
 	/**
 	 * Just because a federate isn't subscribed directly to a particular interaction class doesn't
 	 * mean that it isn't interested in incoming interactions of that type. The federate could be
@@ -1107,7 +1099,7 @@ public class InterestManager implements SaveRestoreTarget
 	 * doesn't find one, <code>null</code> is returned.
 	 * 
 	 * @param federateHandle The handle of the federate who has the potential subscription
-	 * @param initialClass The handle of the object class to start looking for subscriptions at
+	 * @param initialClass   The handle of the object class to start looking for subscriptions at
 	 */
 	public ICMetadata getSubscribedInteractionType( int federateHandle, int initialClass )
 	{
@@ -1117,14 +1109,14 @@ public class InterestManager implements SaveRestoreTarget
 		else
 			return interest.getInteractionClass();
 	}
-	
+
 	/**
 	 * This method is the same as {@link #getSubscribedInteractionType(int, int)} except that it
-	 * will return the relevant {@link ICInterest} rather than the metadata of the type (you can
-	 * get the metadata from the interest).
+	 * will return the relevant {@link ICInterest} rather than the metadata of the type (you can get
+	 * the metadata from the interest).
 	 * 
 	 * @param federateHandle The handle of the federate who has the potential subscription
-	 * @param initialClass The handle of the object class to start looking for subscriptions at
+	 * @param initialClass   The handle of the object class to start looking for subscriptions at
 	 */
 	public ICInterest getSubscribedInteractionInterest( int federateHandle, int initialClass )
 	{
@@ -1132,16 +1124,16 @@ public class InterestManager implements SaveRestoreTarget
 		ICMetadata clazz = fom().getInteractionClass( initialClass );
 		if( clazz == null )
 			return null; // don't know what the initial class is :S
-		
+
 		// check to see if the class is subscribed, if it isn't, move on to its parent and check.
 		// keep doing this until we find the first class that is subscribed (and return it) or
 		// until we run out of parents to check
 		while( true )
 		{
 			ICInterest interest = sInteractions.get( clazz );
-			if( interest != null && interest.hasInterest(federateHandle) )
+			if( interest != null && interest.hasInterest( federateHandle ) )
 				return interest;
-			
+
 			// there is no interest registered for this type of the federate itself hasn't
 			// got an interest in it, move on up to the parent if there is one
 			clazz = clazz.getParent();
@@ -1154,9 +1146,9 @@ public class InterestManager implements SaveRestoreTarget
 	///////////////////////////////// Private Helper Methods /////////////////////////////////
 	//////////////////////////////////////////////////////////////////////////////////////////
 	/**
-	 * When the interest manager is initialized, the federate won't be joined to a federation,
-	 * thus, there will be no object model to obtain. This method is just a utility that fetches
-	 * the model from the {@link LRCState} via {@link LRCState#getFOM()}.
+	 * When the interest manager is initialized, the federate won't be joined to a federation, thus,
+	 * there will be no object model to obtain. This method is just a utility that fetches the model
+	 * from the {@link LRCState} via {@link LRCState#getFOM()}.
 	 */
 	private ObjectModel fom()
 	{
@@ -1177,8 +1169,8 @@ public class InterestManager implements SaveRestoreTarget
 	@SuppressWarnings("unchecked")
 	public void restoreFromStream( ObjectInput input ) throws Exception
 	{
-		this.pObjects      = (Map<OCMetadata,OCInterest>)input.readObject();
-		this.sObjects      = (Map<OCMetadata,OCInterest>)input.readObject();
+		this.pObjects = (Map<OCMetadata,OCInterest>)input.readObject();
+		this.sObjects = (Map<OCMetadata,OCInterest>)input.readObject();
 		this.pInteractions = (Map<ICMetadata,ICInterest>)input.readObject();
 		this.sInteractions = (Map<ICMetadata,ICInterest>)input.readObject();
 	}
@@ -1186,10 +1178,11 @@ public class InterestManager implements SaveRestoreTarget
 	//----------------------------------------------------------
 	//                     STATIC METHODS
 	//----------------------------------------------------------
-	
+
 	private class NoRegistration extends Exception
 	{
 		private static final long serialVersionUID = 98121116105109L;
+
 		public NoRegistration( String message )
 		{
 			super( message );

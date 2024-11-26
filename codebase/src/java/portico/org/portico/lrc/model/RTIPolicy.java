@@ -12,18 +12,36 @@ import java.util.Set;
 
 public class RTIPolicy
 {
-    private Map<String,Set<String>> federationPolicies; // Map<federationName, allowedFederates>
-    private String filePath; // Caminho do arquivo RTIPolicy.xml
-    private String federationName; // Nome da federação
-    private String policyName; // Nome da política RTI
-    private String policyHash; // Hash SHA-256 do arquivo RTIPolicy.xml
+    private static RTIPolicy instance;
+    private Map<String,Map<String,Set<String>>> multiFederationPolicies;
+    private String filePath;
+    private String policyName;
+    private String policyHash;
 
-    public RTIPolicy( String filePath )
+    private RTIPolicy( String filePath )
         throws Exception
     {
-        this.federationPolicies = new HashMap<>();
-        this.filePath = filePath; // Salva o caminho do arquivo
+        this.multiFederationPolicies = new HashMap<>();
+        this.filePath = filePath;
         loadPolicy( filePath );
+    }
+
+    public static synchronized RTIPolicy getInstance( String filePath ) throws Exception
+    {
+        if( instance == null )
+        {
+            instance = new RTIPolicy( filePath );
+        }
+        return instance;
+    }
+
+    public static synchronized RTIPolicy getInstance()
+    {
+        if( instance == null )
+        {
+            throw new IllegalStateException( "RTIPolicy has not been initialized yet." );
+        }
+        return instance;
     }
 
     private void loadPolicy( String filePath ) throws Exception
@@ -34,7 +52,7 @@ public class RTIPolicy
             throw new IllegalArgumentException( "RTIPolicy file not found: " + filePath );
         }
 
-        // Calcular o hash SHA-256 do arquivo
+        // Calcula o hash do arquivo
         this.policyHash = calculateSHA256( policyFile );
 
         // Parse o arquivo XML
@@ -47,33 +65,37 @@ public class RTIPolicy
         Element rootElement = doc.getDocumentElement();
         this.policyName = rootElement.getAttribute( "name" );
 
-        // Ler as políticas de federação
+        // Ler as políticas de todas as federações
         NodeList federationNodes = doc.getElementsByTagName( "Federation" );
         for( int i = 0; i < federationNodes.getLength(); i++ )
         {
             Element federationElement = (Element)federationNodes.item( i );
             String federationName = federationElement.getAttribute( "name" );
 
-            // Apenas define a federação na primeira leitura
-            if( this.federationName == null )
-            {
-                this.federationName = federationName;
-            }
+            // Cria um mapa para os federados permitidos desta federação
+            Map<String,Set<String>> federationAllowedFederates = new HashMap<>();
 
+            // Processa federados permitidos
             Set<String> allowedFederates = new HashSet<>();
-            NodeList federateNodes = federationElement.getElementsByTagName( "allowedFederate" );
-            for( int j = 0; j < federateNodes.getLength(); j++ )
+            NodeList allowedFederateNodes =
+                federationElement.getElementsByTagName( "allowedFederate" );
+            for( int j = 0; j < allowedFederateNodes.getLength(); j++ )
             {
-                Element federateElement = (Element)federateNodes.item( j );
+                Element federateElement = (Element)allowedFederateNodes.item( j );
                 String federateName = federateElement.getAttribute( "name" );
                 allowedFederates.add( federateName );
             }
-            federationPolicies.put( federationName, allowedFederates );
+
+            federationAllowedFederates.put( "allowedFederates", allowedFederates );
+
+            // Adiciona a política desta federação ao mapa de políticas
+            multiFederationPolicies.put( federationName, federationAllowedFederates );
         }
     }
 
     private String calculateSHA256( File file ) throws Exception
     {
+        // Método de cálculo de hash permanece igual ao original
         MessageDigest digest = MessageDigest.getInstance( "SHA-256" );
         FileInputStream fis = new FileInputStream( file );
         byte[] byteArray = new byte[1024];
@@ -87,7 +109,6 @@ public class RTIPolicy
 
         byte[] hashBytes = digest.digest();
 
-        // Converter bytes para uma representação hexadecimal
         StringBuilder hexString = new StringBuilder();
         for( byte b : hashBytes )
         {
@@ -102,36 +123,43 @@ public class RTIPolicy
         return hexString.toString();
     }
 
+    // Verifica se um federado específico é permitido em uma determinada federação
     public boolean isFederateAllowed( String federationName, String federateName )
     {
-        Set<String> allowedFederates = federationPolicies.get( federationName );
-        return allowedFederates != null && allowedFederates.contains( federateName );
+        Map<String,Set<String>> federationPolicies = multiFederationPolicies.get( federationName );
+        if( federationPolicies != null )
+        {
+            Set<String> allowedFederates = federationPolicies.get( "allowedFederates" );
+            return allowedFederates != null && allowedFederates.contains( federateName );
+        }
+        return false;
     }
 
+    // Verifica se uma federação existe na política
     public boolean isFederationAllowed( String federationName )
     {
-        return this.federationName.equals( federationName );
+        return multiFederationPolicies.containsKey( federationName );
     }
 
-    // Getter para o caminho do arquivo RTIPolicy.xml
+    // Recupera os federados permitidos para uma federação específica
+    public Set<String> getAllowedFederates( String federationName )
+    {
+        Map<String,Set<String>> federationPolicies = multiFederationPolicies.get( federationName );
+        return federationPolicies != null ? federationPolicies.get( "allowedFederates" )
+                                          : new HashSet<>();
+    }
+
+    // Getters permanecem inalterados
     public String getFilePath()
     {
         return this.filePath;
     }
 
-    // Getter para o nome da federação
-    public String getFederationName()
-    {
-        return this.federationName;
-    }
-
-    // Getter para o nome da política RTI
     public String getPolicyName()
     {
         return this.policyName;
     }
 
-    // Getter para o hash do arquivo de política
     public String getPolicyFileHash()
     {
         return this.policyHash;

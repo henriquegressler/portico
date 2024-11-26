@@ -53,7 +53,7 @@ public class JoinFederation extends PorticoMessage
 		this.joinModules = new ArrayList<ObjectModel>();
 		this.fomModules = new ArrayList<URL>();
 		this.rtiPolicy = null;
-		this.logger = Logger.getLogger("portico.lrc.services.federation.msg.JoinFederation");
+		this.logger = Logger.getLogger( "portico.lrc.services.federation.msg.JoinFederation" );
 	}
 
 	public JoinFederation( String federationName, String federateName )
@@ -62,28 +62,34 @@ public class JoinFederation extends PorticoMessage
 		this.federateName = federateName;
 		this.federationName = federationName;
 	}
-	
+
 	public JoinFederation( String federationName, String federateName, URL[] fomModules )
 	{
 		this( federationName, federateName );
 		if( fomModules != null )
 		{
-    		for( URL module : fomModules ){
-    			this.fomModules.add( module );
+			for( URL module : fomModules )
+			{
+				this.fomModules.add( module );
 				System.out.println( "syso >>>>> Adding FOM Module: " + module );
-				this.logger.info("Adding FOM Module: " + module);
+				this.logger.info( "Adding FOM Module: " + module );
 			}
 
-			try {
-				File policyFile = new File("RTIpolicy.xml");
-				if (policyFile.exists()) {
-					this.rtiPolicy = new RTIPolicy(policyFile.getPath());
-				} else {
-					this.logger.warn("RTIPolicy.xml not found");
+			try
+			{
+				File policyFile = new File( "RTIpolicy.xml" );
+				if( policyFile.exists() )
+				{
+					this.rtiPolicy = RTIPolicy.getInstance( policyFile.getPath() );
+				}
+				else
+				{
+					this.logger.warn( "RTIPolicy.xml not found" );
 				}
 			}
-			catch( Exception e ) {
-				this.logger.error("Problem loading RTIPolicy.xml", e);
+			catch( Exception e )
+			{
+				this.logger.error( "Problem loading RTIPolicy.xml", e );
 			}
 		}
 	}
@@ -111,7 +117,7 @@ public class JoinFederation extends PorticoMessage
 	{
 		this.federationName = federationName;
 	}
-	
+
 	@Override
 	public boolean isImmediateProcessingRequired()
 	{
@@ -125,13 +131,13 @@ public class JoinFederation extends PorticoMessage
 	{
 		return this.joinModules;
 	}
-	
+
 	public void addJoinModule( ObjectModel module )
 	{
 		if( module != null )
 			this.joinModules.add( module );
 	}
-	
+
 	//////////////////////////////////////////////////
 	/// Transient Properties /////////////////////////
 	//////////////////////////////////////////////////	
@@ -139,12 +145,12 @@ public class JoinFederation extends PorticoMessage
 	{
 		return this.fom;
 	}
-	
+
 	public void setFOM( ObjectModel fom )
 	{
 		this.fom = fom;
 	}
-	
+
 	public List<URL> getFomModules()
 	{
 		return this.fomModules;

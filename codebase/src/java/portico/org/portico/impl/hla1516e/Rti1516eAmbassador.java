@@ -268,15 +268,15 @@ public class Rti1516eAmbassador implements RTIambassador
 			if( policyFile.exists() )
 			{
 				// Carregar a política
-				RTIPolicy policy = new RTIPolicy( policyFile.getAbsolutePath() );
-				logger.info( "RTIPolicy carregada de: " + policyFile.getAbsolutePath() );
-				logger.info( "Hash SHA256 do arquivo de politica: " + policy.getPolicyFileHash() );
+				RTIPolicy policy = RTIPolicy.getInstance( policyFile.getAbsolutePath() );
+				logger.info( "RTIPolicy loaded from: " + policyFile.getAbsolutePath() );
+				logger.info( "Policy file Hash SHA256: " + policy.getPolicyFileHash() );
 
 				// Validar a federação 
-				if( !policy.isFederateAllowed( executionName, policy.getFederationName() ) )
+				if( !policy.isFederationAllowed( executionName ) )
 				{
-					throw new RTIinternalError( "A federação '" + executionName +
-					                            "' não é permitida pela política." );
+					throw new RTIinternalError( "Federation '" + executionName +
+					                            "' do not allowed by policy." );
 				}
 
 				// Associar a política ao pedido
@@ -284,13 +284,13 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else
 			{
-				logger.warn( "RTIPolicy.xml não encontrado em: " + fomDirectory.getAbsolutePath() );
+				logger.warn( "RTIPolicy.xml not found in: " + fomDirectory.getAbsolutePath() );
 			}
 		}
 		catch( Exception e )
 		{
-			logger.error( "Erro ao carregar RTIPolicy.xml: " + e.getMessage(), e );
-			throw new RTIinternalError( "Erro ao carregar RTIPolicy", e );
+			logger.error( "Error loading RTIPolicy.xml: " + e.getMessage(), e );
+			throw new RTIinternalError( "Error loading RTIPolicy", e );
 		}
 
 		ResponseMessage response = processMessage( request );
@@ -361,15 +361,16 @@ public class Rti1516eAmbassador implements RTIambassador
 			if( policyFile.exists() )
 			{
 				// Carregar a política
-				RTIPolicy policy = new RTIPolicy( policyFile.getAbsolutePath() );
-				logger.info( "RTIPolicy carregada de: " + policyFile.getAbsolutePath() );
-				logger.info( "Hash SHA256 do arquivo de politica: " + policy.getPolicyFileHash() );
+				RTIPolicy policy = RTIPolicy.getInstance( policyFile.getAbsolutePath() );
+
+				logger.info( "RTIPolicy loaded from: " + policyFile.getAbsolutePath() );
+				logger.info( "Policy file Hash SHA256: " + policy.getPolicyFileHash() );
 
 				// Validar a federação 
 				if( !policy.isFederationAllowed( federationName ) )
 				{
-					throw new RTIinternalError( "A federação '" + federationName +
-					                            "' não é permitida pela política." );
+					throw new RTIinternalError( "Federation '" + federationName +
+					                            "' do not allowed by policy." );
 				}
 
 				// Associar a política ao pedido
@@ -377,13 +378,13 @@ public class Rti1516eAmbassador implements RTIambassador
 			}
 			else
 			{
-				logger.warn( "RTIPolicy.xml não encontrado em: " + fomDirectory.getAbsolutePath() );
+				logger.warn( "RTIPolicy.xml not found in: " + fomDirectory.getAbsolutePath() );
 			}
 		}
 		catch( Exception e )
 		{
-			logger.error( "Erro ao carregar RTIPolicy.xml: " + e.getMessage(), e );
-			throw new RTIinternalError( "Erro ao carregar RTIPolicy", e );
+			logger.error( "Error loading RTIPolicy.xml: " + e.getMessage(), e );
+			throw new RTIinternalError( "Error loading RTIPolicy", e );
 		}
 
 		ResponseMessage response = processMessage( request );
