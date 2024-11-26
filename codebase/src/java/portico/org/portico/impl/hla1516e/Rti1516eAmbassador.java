@@ -684,15 +684,7 @@ public class Rti1516eAmbassador implements RTIambassador
 		helper.checkConnected();
 
 		// 0.1 validate the federate name
-		if (this.rtiPolicy != null){
-			if (!this.rtiPolicy.isFederateAllowed(federationName, federateName)){
-				logger.fatal("Federate '" + federateName + "' not allowed in Federation '" + federationName + "'");
-				throw new RTIinternalError("Federate not allowed: " + federateName);
-			}
-		}else{
-			logger.error("RTIPolicy not loaded");
-			throw new RTIinternalError("RTIPolicy not loaded");
-		}
+		validateFederate(federationName, federateName);
 
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -5581,6 +5573,19 @@ public class Rti1516eAmbassador implements RTIambassador
 			throw new RTIinternalError("Federation '" + federationName + "' is not allowed by the policy.");
 		}
 	}
+
+	private void validateFederate(String federationName, String federateName) throws RTIinternalError {
+		if (this.rtiPolicy == null) {
+			logger.error("RTIPolicy not loaded");
+			throw new RTIinternalError("RTIPolicy not loaded");
+		}
+	
+		if (!this.rtiPolicy.isFederateAllowed(federationName, federateName)) {
+			logger.fatal("Federate '" + federateName + "' not allowed in Federation '" + federationName + "'");
+			throw new RTIinternalError("Federate not allowed: " + federateName);
+		}
+	}
+	
 	
 	//----------------------------------------------------------
 	//                     STATIC METHODS
