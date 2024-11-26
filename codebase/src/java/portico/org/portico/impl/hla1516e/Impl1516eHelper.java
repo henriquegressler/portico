@@ -44,6 +44,7 @@ import org.portico.lrc.compat.JSaveInProgress;
 import org.portico.lrc.compat.JSynchronizationLabelNotAnnounced;
 import org.portico.lrc.compat.JTimeAdvanceAlreadyInProgress;
 import org.portico.lrc.model.ObjectModel;
+import org.portico.lrc.model.RTIPolicy;
 import org.portico.utils.messaging.MessageContext;
 
 /**
@@ -69,6 +70,7 @@ public class Impl1516eHelper implements ISpecHelper
 	private LRC lrc;
 	private LRCState state;
 	private CallbackModel callbackModel;
+	private RTIPolicy rtiPolicy;
 	
 	private FederateAmbassador fedamb;
 	//----------------------------------------------------------
@@ -145,6 +147,16 @@ public class Impl1516eHelper implements ISpecHelper
 		return this.state.getFOM();
 	}
 	
+	public RTIPolicy getRtiPolicy()
+	{
+		return rtiPolicy;
+	}
+
+	protected void setRtiPolicy( RTIPolicy rtiPolicy )
+	{
+		this.rtiPolicy = rtiPolicy;
+	}
+
 	/**
 	 * Process a single callback, waiting as long as the given timeout (in seconds) for one if
 	 * there are none pendings. Return true if there are more messages waiting to be processed

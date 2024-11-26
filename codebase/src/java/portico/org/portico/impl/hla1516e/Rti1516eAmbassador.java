@@ -15,6 +15,7 @@
 package org.portico.impl.hla1516e;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -164,6 +165,7 @@ public class Rti1516eAmbassador implements RTIambassador
 	//----------------------------------------------------------
 	private Impl1516eHelper helper;
 	private Logger logger;
+	private RTIPolicy rtiPolicy;
 
 	//----------------------------------------------------------
 	//                      CONSTRUCTORS
@@ -256,41 +258,23 @@ public class Rti1516eAmbassador implements RTIambassador
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
-		CreateFederation request = new CreateFederation( executionName, fomModule );
+		CreateFederation request = new CreateFederation(executionName, fomModule);
 
-		// Carregar e validar o RTIPolicy.xml
-		try
-		{
+		try {
 			// Obter o diretório do primeiro módulo FOM
-			File fomDirectory = new File( fomModule.toURI() ).getParentFile();
-			File policyFile = new File( fomDirectory, "RTIPolicy.xml" );
+			File fomDirectory = new File(fomModule.toURI()).getParentFile();
+		
+			// Carregar e validar o RTIPolicy.xml
+			this.rtiPolicy = loadPolicy(fomDirectory);
 
-			if( policyFile.exists() )
-			{
-				// Carregar a política
-				RTIPolicy policy = RTIPolicy.getInstance( policyFile.getAbsolutePath() );
-				logger.info( "RTIPolicy loaded from: " + policyFile.getAbsolutePath() );
-				logger.info( "Policy file Hash SHA256: " + policy.getPolicyFileHash() );
-
-				// Validar a federação 
-				if( !policy.isFederationAllowed( executionName ) )
-				{
-					throw new RTIinternalError( "Federation '" + executionName +
-					                            "' do not allowed by policy." );
-				}
-
-				// Associar a política ao pedido
-				request.setPolicy( policy );
-			}
-			else
-			{
-				logger.warn( "RTIPolicy.xml not found in: " + fomDirectory.getAbsolutePath() );
-			}
-		}
-		catch( Exception e )
-		{
-			logger.error( "Error loading RTIPolicy.xml: " + e.getMessage(), e );
-			throw new RTIinternalError( "Error loading RTIPolicy", e );
+			// Verificar se a federação é permitida
+			isFederationAllowed(executionName);
+		
+			// Associar a política ao pedido
+			request.setPolicy(rtiPolicy);
+		} catch (URISyntaxException | RTIinternalError e) {
+			logger.error("Error loading RTIPolicy.xml: " + e.getMessage(), e);
+			throw new RTIinternalError("Error loading RTIPolicy", e);
 		}
 
 		ResponseMessage response = processMessage( request );
@@ -349,42 +333,23 @@ public class Rti1516eAmbassador implements RTIambassador
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
 		///////////////////////////////////////////////////////
-		CreateFederation request = new CreateFederation( federationName, fomModules );
+		CreateFederation request = new CreateFederation(federationName, fomModules);
 
-		// Carregar e validar o RTIPolicy.xml
-		try
-		{
+		try {
 			// Obter o diretório do primeiro módulo FOM
-			File fomDirectory = new File( fomModules[0].toURI() ).getParentFile();
-			File policyFile = new File( fomDirectory, "RTIPolicy.xml" );
+			File fomDirectory = new File(fomModules[0].toURI()).getParentFile();
+		
+			// Carregar e validar o RTIPolicy.xml
+			this.rtiPolicy = loadPolicy(fomDirectory);
 
-			if( policyFile.exists() )
-			{
-				// Carregar a política
-				RTIPolicy policy = RTIPolicy.getInstance( policyFile.getAbsolutePath() );
-
-				logger.info( "RTIPolicy loaded from: " + policyFile.getAbsolutePath() );
-				logger.info( "Policy file Hash SHA256: " + policy.getPolicyFileHash() );
-
-				// Validar a federação 
-				if( !policy.isFederationAllowed( federationName ) )
-				{
-					throw new RTIinternalError( "Federation '" + federationName +
-					                            "' do not allowed by policy." );
-				}
-
-				// Associar a política ao pedido
-				request.setPolicy( policy );
-			}
-			else
-			{
-				logger.warn( "RTIPolicy.xml not found in: " + fomDirectory.getAbsolutePath() );
-			}
-		}
-		catch( Exception e )
-		{
-			logger.error( "Error loading RTIPolicy.xml: " + e.getMessage(), e );
-			throw new RTIinternalError( "Error loading RTIPolicy", e );
+			// Verificar se a federação é permitida
+			isFederationAllowed(federationName);
+		
+			// Associar a política ao pedido
+			request.setPolicy(rtiPolicy);
+		} catch (URISyntaxException | RTIinternalError e) {
+			logger.error("Error loading RTIPolicy.xml: " + e.getMessage(), e);
+			throw new RTIinternalError("Error loading RTIPolicy", e);
 		}
 
 		ResponseMessage response = processMessage( request );
@@ -717,6 +682,17 @@ public class Rti1516eAmbassador implements RTIambassador
 		// 0. check the federate ambassador //
 		// If we don't have a federate ambassador, we haven't connected yet
 		helper.checkConnected();
+
+		// 0.1 validate the federate name
+		if (this.rtiPolicy != null){
+			if (!this.rtiPolicy.isFederateAllowed(federationName, federateName)){
+				logger.fatal("Federate '" + federateName + "' not allowed in Federation '" + federationName + "'");
+				throw new RTIinternalError("Federate not allowed: " + federateName);
+			}
+		}else{
+			logger.error("RTIPolicy not loaded");
+			throw new RTIinternalError("RTIPolicy not loaded");
+		}
 
 		///////////////////////////////////////////////////////
 		// 1. create the message and pass it to the LRC sink //
@@ -5574,6 +5550,38 @@ public class Rti1516eAmbassador implements RTIambassador
 			                            methodName );
 	}
 
+
+	private RTIPolicy loadPolicy(File fomDirectory) throws RTIinternalError {
+		File policyFile = new File(fomDirectory, "RTIPolicy.xml");
+	
+		if (!policyFile.exists()) {
+			throw new RTIinternalError("RTIPolicy.xml not found in: " + fomDirectory.getAbsolutePath());
+		}
+	
+		try {
+			RTIPolicy policy = RTIPolicy.getInstance(policyFile.getAbsolutePath());
+			logger.info("RTIPolicy loaded from: " + policyFile.getAbsolutePath());
+			logger.info("Policy file Hash SHA256: " + policy.getPolicyFileHash());
+			this.helper.setRtiPolicy(policy);
+			return policy;
+		} catch (Exception e) {
+			logger.fatal("Error loading RTIPolicy from: " + policyFile.getAbsolutePath());
+			throw new RTIinternalError("Error loading RTIPolicy from: " + policyFile.getAbsolutePath(), e);
+		}
+	}
+
+	private void isFederationAllowed(String federationName) throws RTIinternalError {
+		if (this.rtiPolicy == null) {
+			logger.fatal("RTIPolicy has not been initialized. Federation validation cannot proceed.");
+			throw new RTIinternalError("RTIPolicy has not been initialized. Federation validation cannot proceed.");
+		}
+	
+		if (!this.rtiPolicy.isFederationAllowed(federationName)) {
+			logger.fatal("Federation '" + federationName + "' is not allowed by the policy.");
+			throw new RTIinternalError("Federation '" + federationName + "' is not allowed by the policy.");
+		}
+	}
+	
 	//----------------------------------------------------------
 	//                     STATIC METHODS
 	//----------------------------------------------------------
