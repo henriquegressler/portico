@@ -164,4 +164,70 @@ public class RTIPolicy
     {
         return this.policyHash;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n\nRTI Policy Information\n\n");
+        sb.append("Policy Name: ").append(policyName).append("\n");
+        sb.append("Policy File Hash (SHA-256): ").append(policyHash).append("\n\n");
+    
+        sb.append("Federations and Authorized Federates:\n");
+        for (String federationName : multiFederationPolicies.keySet()) {
+            sb.append("  Federation: ").append(federationName).append("\n");
+    
+            Map<String, Set<String>> federationPolicies = multiFederationPolicies.get(federationName);
+            Set<String> allowedFederates = federationPolicies.get("allowedFederates");
+            if (allowedFederates != null) {
+                sb.append("    Authorized Federates:\n");
+                for (String federateName : allowedFederates) {
+                    sb.append("      - Federate: ").append(federateName).append("\n");
+                }
+            }
+    
+            sb.append("    Profiles and Access Rights:\n");
+            NodeList profileNodes = getProfilesForFederation(federationName); // Helper method to parse profiles
+            if (profileNodes != null) {
+                for (int i = 0; i < profileNodes.getLength(); i++) {
+                    Element profileElement = (Element) profileNodes.item(i);
+                    String profileName = profileElement.getAttribute("name");
+    
+                    sb.append("      - Profile: ").append(profileName).append("\n");
+                    NodeList accessRights = profileElement.getElementsByTagName("accessRight");
+                    for (int j = 0; j < accessRights.getLength(); j++) {
+                        Element accessElement = (Element) accessRights.item(j);
+                        String topic = accessElement.getAttribute("topic");
+                        String operation = accessElement.getAttribute("op");
+    
+                        sb.append("          Object/Interaction Class: ").append(topic)
+                          .append(" (Operation: ").append(operation).append(")\n");
+                    }
+                }
+            }
+        }
+    
+        return sb.toString();
+    }
+
+    // Helper method to parse profiles for a federation
+    private NodeList getProfilesForFederation(String federationName) {
+        try {
+            // Parse the original XML policy file
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document doc = builder.parse(new File(filePath));
+            doc.getDocumentElement().normalize();
+
+            NodeList federationNodes = doc.getElementsByTagName("Federation");
+            for (int i = 0; i < federationNodes.getLength(); i++) {
+                Element federationElement = (Element) federationNodes.item(i);
+                if (federationElement.getAttribute("name").equals(federationName)) {
+                    return federationElement.getElementsByTagName("profileFederate");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
